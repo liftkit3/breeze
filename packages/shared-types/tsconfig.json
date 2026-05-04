@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "moduleResolution": "bundler",
+    "declaration": true,
+    "outDir": "dist",
+    "noEmit": false,
+    "composite": true
+  },
+  "include": ["index.ts", "database.ts"],
+  "exclude": ["node_modules", "dist"]
+}

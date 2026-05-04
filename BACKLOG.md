@@ -13,7 +13,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 | # | Story | Acceptance criteria | Est. | Actual | Status |
 |---|-------|---------------------|------|--------|--------|
-| 1 | Monorepo + Expo + NativeWind locked | Repo creado con apps/mobile + packages/, `npx expo start` corre, NativeWind aplica clases sin errors, design-tokens importable | 3h | — | ○ |
+| 1 | Monorepo + Expo + NativeWind locked | Repo creado con apps/mobile + packages/, `npx expo start` corre, NativeWind aplica clases sin errors, design-tokens importable | 3h | 1.5h | ✓ |
 | 2 | Supabase project + schema + RLS | 3 tablas (companies, profiles, pauses) creadas via migrations versionadas, RLS testeada para los 3 casos (own, company-mate, foreign) | 3h | — | ○ |
 | 3 | Auth: Google + Apple + Email OTP + Face ID | 4 métodos funcionan en device real, Face ID guarda token cifrado en Keychain, re-login funciona | 5h | — | ○ |
 | 4 | Domain routing Edge Function | Edge Function `domain-router` recibe email → match con companies.domain → retorna `{route: 'onboarding' | 'waitlist' | 'cap_full'}` | 3h | — | ○ |
@@ -87,6 +87,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 <!-- /progress logs variations, risks, and decisions here as you build -->
 <!-- Format: `[YYYY-MM-DD] [Milestone] [Decision/risk/learning]` -->
+[2026-05-03] [M1 S1] npm workspaces chosen (no Yarn/PNPM). NativeWind preset path changed in 4.2.x: use `nativewind/dist/tailwind` (not `/tailwind/native`). react@18.3.2 doesn't exist — pinned to 18.3.1. @types/react-native deprecated (RN ships its own types). `npx expo start` runs clean from apps/mobile.
 
 ---
 

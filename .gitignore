@@ -1,0 +1,26 @@
+node_modules/
+.expo/
+dist/
+.next/
+out/
+build/
+
+# Env files — NEVER commit
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# OS
+.DS_Store
+*.log
+
+# EAS
+.eas/
+
+# Supabase
+supabase/.temp/
+
+# TypeScript
+*.tsbuildinfo

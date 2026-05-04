@@ -1,0 +1,12 @@
+{
+  "name": "@breeze/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "main": "tokens.js",
+  "types": "index.d.ts",
+  "files": [
+    "tokens.js",
+    "index.ts",
+    "index.d.ts"
+  ]
+}

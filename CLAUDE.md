@@ -18,6 +18,19 @@ B2C + B2B mobile app (modelo híbrido tipo Granola) que envía notificaciones mi
 
 ---
 
+## Story completion output (MANDATORY)
+
+After completing every story, output a summary table before any other closing remarks:
+
+| | |
+|---|---|
+| **What was done** | 1–3 lines, plain language, zero technical jargon. What exists now that didn't before. |
+| **Why it matters** | 1–3 lines. How it moves us toward the north star: tech employees pausing, recovering energy, and Breeze earning revenue. |
+
+No exceptions. Even tiny stories get the table.
+
+---
+
 ## 🔴 HARD RULES — non-negotiable
 
 These rules apply to EVERY task. If a task conflicts with these, pause and ask the user.
@@ -56,13 +69,17 @@ These rules apply to EVERY task. If a task conflicts with these, pause and ask t
 ### NativeWind / Expo versioning
 - Versiones **lockedas** en `package.json`. NO auto-update.
 - Antes de cambiar versión: validar matriz de compatibilidad en https://www.nativewind.dev/getting-started/expo-router
-- Versiones fijas:
+- Versiones fijas (SDK 54 = React 19 + RN 0.81 + Reanimated 4):
   ```
   "expo": "~54.0.0"
-  "nativewind": "^4.1.23"
+  "react": "19.1.0"
+  "react-native": "0.81.5"
+  "expo-router": "~6.0.23"
+  "react-native-reanimated": "~4.1.1"
+  "nativewind": "^4.2.1"
   "tailwindcss": "^3.4.17"
-  "react-native-reanimated": "~3.16.0"
   ```
+  NativeWind 4.2.x require react-native-worklets (auto-instalado por reanimated 4).
 
 ### Subscription rules (Granola-style hybrid)
 - **NUNCA** implementar IAP custom — siempre via RevenueCat SDK

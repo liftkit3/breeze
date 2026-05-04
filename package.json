@@ -9,5 +9,9 @@
   "scripts": {
     "mobile": "npm run dev --workspace=apps/mobile",
     "web": "npm run dev --workspace=apps/web"
+  },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   }
 }

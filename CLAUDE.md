@@ -72,7 +72,7 @@ These rules apply to EVERY task. If a task conflicts with these, pause and ask t
 - Versiones fijas:
   ```
   "expo": "~54.0.0"
-  "nativewind": "^4.1.23"
+  "nativewind": "4.1.23"
   "tailwindcss": "^3.4.17"
   "react-native-reanimated": "~3.16.0"
   ```

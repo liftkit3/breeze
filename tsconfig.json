@@ -6,8 +6,15 @@
     "noEmit": true
   },
   "references": [
-    { "path": "./apps/mobile" },
-    { "path": "./packages/design-tokens" },
-    { "path": "./packages/shared-types" }
-  ]
+    {
+      "path": "./apps/mobile"
+    },
+    {
+      "path": "./packages/design-tokens"
+    },
+    {
+      "path": "./packages/shared-types"
+    }
+  ],
+  "extends": "expo/tsconfig.base"
 }

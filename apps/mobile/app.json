@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Breeze",
+    "slug": "breeze",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "breeze",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.breeze.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#4F46E5"
+      },
+      "package": "app.breeze.mobile"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-local-authentication",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FAFAF9"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

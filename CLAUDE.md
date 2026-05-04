@@ -18,6 +18,19 @@ B2C + B2B mobile app (modelo híbrido tipo Granola) que envía notificaciones mi
 
 ---
 
+## Story completion output (MANDATORY)
+
+After completing every story, output a summary table before any other closing remarks:
+
+| | |
+|---|---|
+| **What was done** | 1–3 lines, plain language, zero technical jargon. What exists now that didn't before. |
+| **Why it matters** | 1–3 lines. How it moves us toward the north star: tech employees pausing, recovering energy, and Breeze earning revenue. |
+
+No exceptions. Even tiny stories get the table.
+
+---
+
 ## 🔴 HARD RULES — non-negotiable
 
 These rules apply to EVERY task. If a task conflicts with these, pause and ask the user.

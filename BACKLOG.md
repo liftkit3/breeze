@@ -28,6 +28,16 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 **M1 ship criteria:** development build instalable en TestFlight interno, flujo completo funciona end-to-end con 1 empleado de prueba.
 
+**External prerequisites — confirma ANTES de arrancar cada story (regla pre-flight):**
+
+| Story | Requires |
+|-------|----------|
+| S3 | Apple Developer account ($99/año, ~24h activación) · Google Cloud OAuth Client (Web + iOS bundle ID) · Apple Sign-In Service ID + Key (.p8) + Team ID + Key ID · Supabase Auth providers configurados (Google + Apple) en dashboard · iOS device físico para Face ID |
+| S4 | Ninguna externa (Edge Functions auto-enabled con el proyecto Supabase) |
+| S7 | Google Cloud Console: Calendar API habilitada · scope `calendar.readonly` añadido al OAuth client de S3 · cuenta Google con eventos reales para testing de gaps |
+| S8 | EAS account (Expo) configurada · APN cert para iOS push (vía EAS, no se necesita Apple Developer extra) |
+| S10 | CLAUDE_API_KEY (cuenta Anthropic con billing activo) · key seteada como secret en Supabase Edge Functions |
+
 ---
 
 ## ══ MILESTONE 1.5: Marketing Web + App Store Compliance — 14h ══

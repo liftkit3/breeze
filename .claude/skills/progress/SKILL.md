@@ -12,8 +12,9 @@ Show where Breeze stands. Fast, compact, actionable.
 1. Read `BACKLOG.md` from the project root.
 2. Parse milestones, stories, status markers (○ pending · → in progress · ✓ done · ✗ blocked).
 3. Compute: total stories done / total, hours estimated / hours actual, current milestone progress, current story (the first `→` or first `○` after all `✓`).
-4. Show the compact view (≤15 lines).
-5. If a `Build Log` section has entries, surface the most recent 1-2.
+4. Parse the **External prerequisites** table for the current milestone (if any). Locate the row for the current story by its number. Each prereq item is treated as a binary check; default to "unverified" unless evidence in repo says otherwise.
+5. Show the compact view (≤18 lines including blockers block).
+6. If a `Build Log` section has entries, surface the most recent 1-2.
 
 ## Output format
 
@@ -34,12 +35,15 @@ Breeze — [milestone X of 4: name]
 Current: #N [story title]
 Status:  [→ in progress / ○ next up / ✗ blocked because X]
 Hours:   X.X actual / Yh estimated for this story
+Requires: [comma-separated prereqs from BACKLOG external prerequisites table, or "Ninguna externa"]
 
 Last shipped: #N-1 [story title] (Xh actual vs Yh est)
 Recent log:   [last Build Log entry, if any]
 
 Next: [exact action to take — usually "Build story #N from BACKLOG.md"]
 ```
+
+If the current story has external prerequisites, the `Requires:` line is mandatory. Render verbatim from BACKLOG.md so the user sees what they must confirm before saying "build it." If there are no externals, render `Requires: Ninguna externa`.
 
 If a story is blocked (✗), show the block reason from the row and recommend an action (resolve dependency, ask user, defer).
 

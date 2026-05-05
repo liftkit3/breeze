@@ -14,7 +14,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | # | Story | Acceptance criteria | Est. | Actual | Status |
 |---|-------|---------------------|------|--------|--------|
 | 1 | Monorepo + Expo + NativeWind locked | Repo creado con apps/mobile + packages/, `npx expo start` corre, NativeWind aplica clases sin errors, design-tokens importable | 3h | 1.5h | ✓ |
-| 2 | Supabase project + schema + RLS | 3 tablas (companies, profiles, pauses) creadas via migrations versionadas, RLS testeada para los 3 casos (own, company-mate, foreign) | 3h | — | ○ |
+| 2 | Supabase project + schema + RLS | 3 tablas (companies, profiles, pauses) creadas via migrations versionadas, RLS testeada para los 3 casos (own, company-mate, foreign) | 3h | 2.5h | ✓ |
 | 3 | Auth: Google + Apple + Email OTP + Face ID | 4 métodos funcionan en device real, Face ID guarda token cifrado en Keychain, re-login funciona | 5h | — | ○ |
 | 4 | Domain routing Edge Function | Edge Function `domain-router` recibe email → match con companies.domain → retorna `{route: 'onboarding' | 'waitlist' | 'cap_full'}` | 3h | — | ○ |
 | 5 | Onboarding quiz: hobbies + contexto + push permission | Quiz tipo personalidad (no formulario), guarda hobbies array + default_context en profile, pide push permission con copy claro | 4h | — | ○ |
@@ -27,6 +27,16 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | 12 | Post-pause feedback screen | "¿Cómo te sentiste?" (3 emoji buttons), guarda en pauses, muestra streak update animado | 1h | — | ○ |
 
 **M1 ship criteria:** development build instalable en TestFlight interno, flujo completo funciona end-to-end con 1 empleado de prueba.
+
+**External prerequisites — confirma ANTES de arrancar cada story (regla pre-flight):**
+
+| Story | Requires |
+|-------|----------|
+| S3 | Apple Developer account ($99/año, ~24h activación) · Google Cloud OAuth Client (Web + iOS bundle ID) · Apple Sign-In Service ID + Key (.p8) + Team ID + Key ID · Supabase Auth providers configurados (Google + Apple) en dashboard · iOS device físico para Face ID |
+| S4 | Ninguna externa (Edge Functions auto-enabled con el proyecto Supabase) |
+| S7 | Google Cloud Console: Calendar API habilitada · scope `calendar.readonly` añadido al OAuth client de S3 · cuenta Google con eventos reales para testing de gaps |
+| S8 | EAS account (Expo) configurada · APN cert para iOS push (vía EAS, no se necesita Apple Developer extra) |
+| S10 | CLAUDE_API_KEY (cuenta Anthropic con billing activo) · key seteada como secret en Supabase Edge Functions |
 
 ---
 
@@ -88,6 +98,8 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 <!-- /progress logs variations, risks, and decisions here as you build -->
 <!-- Format: `[YYYY-MM-DD] [Milestone] [Decision/risk/learning]` -->
 [2026-05-03] [M1 S1] npm workspaces chosen (no Yarn/PNPM). NativeWind preset path changed in 4.2.x: use `nativewind/dist/tailwind` (not `/tailwind/native`). react@18.3.2 doesn't exist — pinned to 18.3.1. @types/react-native deprecated (RN ships its own types). `npx expo start` runs clean from apps/mobile.
+[2026-05-04] [M1 S2] Local supabase ports bumped +100 (api 54421, db 54422, studio 54423) to coexist with another project's stack on default ports. RLS recursion avoided via `auth_user_company_id()` / `auth_user_role()` SECURITY DEFINER helpers; named around the reserved `current_role` keyword. Schema status enums in the DB (`pauses.status` = pending/started/completed/skipped, `pauses.trigger_type` adds `surprise_monthly`, `subscription_status` adds `company`) drifted from the hand-written unions in `packages/shared-types/index.ts` — no consumers yet, deferred to whichever story first builds a screen that writes those columns. RLS tests live in `supabase/tests/rls.test.sql` and run with `psql -f`.
+[2026-05-04] [M1 S2] Remote project `breeze` (ref xkzpehqgbrngkfyxaeju, region us-east-2 Ohio) provisioned in liftkit3@gmail.com. Migrations 0001-0003 pushed clean. Project was created with "Automatically expose new tables" UNCHECKED — that meant DML grants weren't auto-applied to authenticated, so REST returned 401/42501 even with valid RLS. Migration 0003 grants explicit privileges per role (anon: none; authenticated: select/update on companies, select/insert/update on profiles, full DML on pauses). Mobile `.env.local` written at `apps/mobile/.env.local` with EXPO_PUBLIC_SUPABASE_URL + publishable key (new sb_publishable_* format, replaces legacy anon JWT).
 
 ---
 

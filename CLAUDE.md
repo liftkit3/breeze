@@ -92,6 +92,23 @@ These rules apply to EVERY task. If a task conflicts with these, pause and ask t
 - Better 5 min de aclaración que 2h de build wrong
 - No asumas. No "future-proof." No premature abstractions.
 
+### Pre-flight check ANTES de cada story (regla #2 después de branching)
+
+Antes de escribir UNA línea de código de cualquier story, recito en voz alta este audit de 60 segundos:
+
+1. **Servicios externos** — ¿esta story necesita un proyecto/cuenta remota que no exista todavía?
+   Lista típica: Supabase (proyecto remoto), Stripe, RevenueCat, Apple Developer ($99/año), Google Play ($25 una vez), Vercel, dominio breeze.app, Google Cloud Console (OAuth + APIs), Apple Developer Portal (App ID + Sign In with Apple Service ID + Key), Anthropic (CLAUDE_API_KEY con billing), Resend, Sentry, PostHog.
+2. **Credenciales** — ¿están todas las keys requeridas en `.env.local` / EAS Secrets / Vercel env / Supabase Edge secrets? Verifica con `cat`, no con memoria.
+3. **Hardware / cuentas pagas** — ¿necesita device físico (Face ID, push real), signing cert, o cuenta con costo activo?
+4. **Upstream artifacts** — para cada story ✓ previa de la que esta dependa: VERIFICA que el deliverable existe (lee el archivo, query la tabla, hit el endpoint). NO confíes en el ✓ por sí solo.
+
+Si algo falta → STOP. Flagger al usuario. Decidir entre:
+- (a) Shipping del unblocker como una story propia (entrada nueva en BACKLOG.md, sus propias horas, su propio status)
+- (b) El usuario provee el missing piece (cuenta paga, OAuth client, dominio comprado, device en mano)
+- (c) Mark current story `✗ blocked because [razón]` y pivot a otra
+
+**NUNCA enterrar setup de infra como tiempo oculto dentro de otra story.** Si tomó 1h provisionar Supabase remoto, esa hora se loguea en su propia entrada — no se camufla en S2.
+
 ---
 
 ## 🚫 NEVER BUILD (deferred features)

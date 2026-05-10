@@ -2,6 +2,8 @@ import { palette } from "@breeze/design-tokens";
 import { AppleIcon } from "./icons/AppleIcon";
 import { GoogleIcon } from "./icons/GoogleIcon";
 import { MailIcon } from "./icons/MailIcon";
+import { ChevronLeftIcon } from "./icons/ChevronLeftIcon";
+import { CheckIcon } from "./icons/CheckIcon";
 import {
   GuitarIcon,
   BookIcon,
@@ -44,6 +46,8 @@ export type IconName =
   | "apple"
   | "google"
   | "mail"
+  | "chevron-left"
+  | "check"
   | "guitar"
   | "book"
   | "running"
@@ -71,6 +75,10 @@ export function Icon({ name, size = "md", color = "text" }: IconProps) {
       return <GoogleIcon size={px} />;
     case "mail":
       return <MailIcon size={px} color={hex} />;
+    case "chevron-left":
+      return <ChevronLeftIcon size={px} color={hex} />;
+    case "check":
+      return <CheckIcon size={px} color={hex} />;
     case "guitar":
       return <GuitarIcon size={px} color={hex} />;
     case "book":

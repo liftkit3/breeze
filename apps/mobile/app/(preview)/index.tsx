@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Link, type Href } from "expo-router";
 import { Stack } from "@/components/Stack";
@@ -7,6 +8,8 @@ import { Logo } from "@/components/Logo";
 import { Icon } from "@/components/Icon";
 import { Spacer } from "@/components/Spacer";
 import { TaglineRotator } from "@/components/TaglineRotator";
+import { TextInput } from "@/components/TextInput";
+import { BackBar } from "@/components/BackBar";
 
 /**
  * Preview catalog — renders every primitive in every variant.
@@ -16,6 +19,7 @@ import { TaglineRotator } from "@/components/TaglineRotator";
  * confirm it matches the spec, then it's locked.
  */
 export default function PreviewCatalog() {
+  const [previewEmail, setPreviewEmail] = useState("");
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="p-lg">
       <Stack gap="2xl">
@@ -164,13 +168,69 @@ export default function PreviewCatalog() {
           </View>
         </Section>
 
+        <Section title="BackBar (on dark)">
+          <View className="bg-bg-inverse p-md rounded-md">
+            <BackBar onPress={() => {}} />
+          </View>
+        </Section>
+
+        <Section title="TextInput — glass-dark">
+          <View className="bg-bg-inverse p-md rounded-md">
+            <TextInput
+              variant="glass-dark"
+              leftIcon={<Icon name="mail" color="inverse" />}
+              value={previewEmail}
+              onChangeText={setPreviewEmail}
+              placeholder="tu@empresa.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+        </Section>
+
+        <Section title="Button — auth pills">
+          <View className="bg-bg-inverse p-md rounded-md">
+            <Stack gap="sm">
+              <Button variant="primary-pill" fullWidth onPress={() => {}}>
+                Continuar
+              </Button>
+              <Button variant="glass-disabled" fullWidth onPress={() => {}}>
+                Continuar
+              </Button>
+              <Button variant="primary-pill" fullWidth loading onPress={() => {}}>
+                Verificar
+              </Button>
+            </Stack>
+          </View>
+        </Section>
+
         <Spacer size="2xl" />
 
-        <Link href={"/(auth)/welcome" as Href} asChild>
-          <Button variant="primary" fullWidth onPress={() => {}}>
-            See real Login screen →
-          </Button>
-        </Link>
+        <Section title="Auth flow — real screens">
+          <Stack gap="sm">
+            <Link href={"/(auth)/welcome" as Href} asChild>
+              <Button variant="primary" fullWidth onPress={() => {}}>
+                Welcome (Login) →
+              </Button>
+            </Link>
+            <Link href={"/(auth)/email" as Href} asChild>
+              <Button variant="secondary" fullWidth onPress={() => {}}>
+                Email →
+              </Button>
+            </Link>
+            <Link href={{ pathname: "/(auth)/otp", params: { email: "tu@empresa.com" } } as Href} asChild>
+              <Button variant="secondary" fullWidth onPress={() => {}}>
+                OTP →
+              </Button>
+            </Link>
+            <Link href={"/(auth)/verified" as Href} asChild>
+              <Button variant="secondary" fullWidth onPress={() => {}}>
+                Verified →
+              </Button>
+            </Link>
+          </Stack>
+        </Section>
 
       </Stack>
     </ScrollView>

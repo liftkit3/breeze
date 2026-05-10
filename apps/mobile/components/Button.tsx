@@ -13,6 +13,8 @@ import { Text, type TextColor } from "./Text";
  *   primary / secondary           → rounded-md (16px) — standard buttons
  *   oauth-light / oauth-outline   → rounded-full (9999px) — pill, used on dark-hero
  *   oauth-glass                   → rounded-full + semi-transparent — Login cosmic-pill style
+ *   primary-pill                  → sage filled pill — Continue/Verify CTAs on auth screens
+ *   glass-disabled                → faint glass pill — disabled-state pair to primary-pill
  */
 
 const buttonContainerStyles = cva(
@@ -26,12 +28,16 @@ const buttonContainerStyles = cva(
         "oauth-light":  "bg-bg-surface rounded-full",
         "oauth-outline": "border border-text-inverse/30 rounded-full",
         "oauth-glass":  "bg-white/10 border border-white/20 rounded-full",
+        // Auth-screen CTAs (email / otp / verified)
+        "primary-pill":   "bg-primary rounded-full",
+        "glass-disabled": "bg-white/[0.08] border border-white/[0.12] rounded-full",
       },
       size: {
         sm: "py-sm px-md",
         md: "py-md px-md",
         lg: "py-md px-lg",
         oauth: "py-md px-lg", // tuned for pill OAuth (16px vertical, 24px horizontal)
+        pill: "py-md px-lg",  // primary-pill / glass-disabled — same as oauth pills
       },
       fullWidth: {
         true: "w-full",
@@ -58,6 +64,8 @@ const variantToTextColor: Record<NonNullable<VariantProps<typeof buttonContainer
   "oauth-light": "text",
   "oauth-outline": "inverse",
   "oauth-glass": "inverse",
+  "primary-pill": "onPrimary",
+  "glass-disabled": "inverse",
 };
 
 export type ButtonVariant = NonNullable<VariantProps<typeof buttonContainerStyles>["variant"]>;
@@ -88,7 +96,8 @@ export function Button({
   const textColor = variantToTextColor[resolvedVariant];
   const isInactive = disabled || loading;
   const isOAuth = resolvedVariant.startsWith("oauth");
-  const resolvedSize = size ?? (isOAuth ? "oauth" : "md");
+  const isPill = resolvedVariant === "primary-pill" || resolvedVariant === "glass-disabled";
+  const resolvedSize = size ?? (isOAuth ? "oauth" : isPill ? "pill" : "md");
 
   return (
     <Pressable
@@ -108,7 +117,15 @@ export function Button({
       accessibilityState={{ disabled: isInactive ?? false }}
     >
       {iconLeft ? <View className="mr-sm">{iconLeft}</View> : null}
-      <Text variant="body" color={textColor} className="font-semibold">
+      <Text
+        variant="body"
+        color={textColor}
+        className={cn(
+          "font-semibold",
+          // glass-disabled fades the label to read as inert (spec: white/45)
+          resolvedVariant === "glass-disabled" && "opacity-50",
+        )}
+      >
         {children}
       </Text>
       {iconRight ? <View className="ml-sm">{iconRight}</View> : null}

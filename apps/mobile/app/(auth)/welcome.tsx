@@ -23,10 +23,10 @@ import { TaglineRotator } from "@/components/TaglineRotator";
  *   - Footer disclaimer (Términos & Política de privacidad)
  */
 export default function WelcomeScreen() {
-  // TODO(stage 5+): wire actual auth flows from features/auth/
-  const handleApple = () => router.replace("/(main)" as any);
-  const handleGoogle = () => router.replace("/(main)" as any);
-  const handleEmail = () => router.replace("/(main)" as any);
+  // Email is wired (S3 Email OTP flow). Apple/Google still pending.
+  const handleApple = () => router.replace("/(main)" as never);
+  const handleGoogle = () => router.replace("/(main)" as never);
+  const handleEmail = () => router.push("/(auth)/email");
 
   return (
     <ScreenFrame variant="dark-hero">

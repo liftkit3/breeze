@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { router } from "expo-router";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 import { ScreenFrame } from "@/components/ScreenFrame";
 import { Stack } from "@/components/Stack";
 import { Spacer } from "@/components/Spacer";
@@ -8,6 +9,7 @@ import { Text } from "@/components/Text";
 import { Button } from "@/components/Button";
 import { Icon } from "@/components/Icon";
 import { TaglineRotator } from "@/components/TaglineRotator";
+import { useAuth } from "@/features/auth/auth-context";
 
 /**
  * Welcome (Login) — cosmic-pill design.
@@ -23,9 +25,26 @@ import { TaglineRotator } from "@/components/TaglineRotator";
  *   - Footer disclaimer (Términos & Política de privacidad)
  */
 export default function WelcomeScreen() {
-  // Email is wired (S3 Email OTP flow). Apple/Google still pending.
+  const { signInWithGoogle } = useAuth();
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
+
+  // Apple still pending — wires after Google ships in S3.
   const handleApple = () => router.replace("/(main)" as never);
-  const handleGoogle = () => router.replace("/(main)" as never);
+
+  const handleGoogle = async () => {
+    if (googleSubmitting) return;
+    setGoogleSubmitting(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result === "signed-in") router.replace("/(auth)/verified");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "No pudimos iniciar sesión con Google.";
+      Alert.alert("Error", msg);
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
+
   const handleEmail = () => router.push("/(auth)/email");
 
   return (
@@ -53,6 +72,7 @@ export default function WelcomeScreen() {
         <Button
           variant="oauth-glass"
           fullWidth
+          loading={googleSubmitting}
           iconLeft={<Icon name="google" />}
           onPress={handleGoogle}
         >

@@ -13,9 +13,19 @@ import {
 import { AuthProvider } from "@/features/auth/auth-context";
 import "../global.css";
 
-// `.catch` swallows the "no native splash screen registered" rejection that
-// fires when expo-router re-mounts the root layout (e.g. after the OAuth deep
-// link returns) and the splash has already been hidden. Harmless either way.
+// expo-router also calls SplashScreen methods internally on re-mount (e.g.
+// after the OAuth deep link returns), and those calls don't have .catch
+// wrappers. Filter the specific "No native splash screen registered" error
+// at the console.error level so it stops showing in Metro logs. Harmless
+// either way — in a real dev build the splash is properly registered.
+const originalConsoleError = console.error;
+console.error = (...args: unknown[]) => {
+  const first = args[0];
+  const msg = first instanceof Error ? first.message : String(first ?? "");
+  if (msg.includes("No native splash screen registered")) return;
+  originalConsoleError.apply(console, args);
+};
+
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {

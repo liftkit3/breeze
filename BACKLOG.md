@@ -9,14 +9,17 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 ## ⚡ Next up (pick from here)
 
-1. **Close M0.5 D8** — Husky pre-commit hook (0.5h) → blocks any future drift before commit
-2. **Close M0.5 D9** — Plus Jakarta Sans font loading via expo-google-fonts (0.5h) → pixel-perfect typography
-3. **Close M0.5 D10** — Update repo CLAUDE.md with brand rules + composition discipline (0.5h) → future agents won't bypass system
-4. **Resume M1 S3** — Real OAuth wiring (UI is locked from M0.5; only auth logic pending) (~3h remaining of original 5h estimate)
+1. **M1 S3 Phase 2** — TextInput primitive (~30 min, needed for email/otp screens)
+2. **M1 S3 Phase 3** — Refactor email.tsx + otp.tsx using primitives (~45 min, logic from claude/zealous-jones-0b735a)
+3. **M1 S3 Phase 4** — Wire welcome → email handoff (~5 min)
+4. **Close M0.5 D8** — Husky pre-commit hook (0.5h)
+5. **Close M0.5 D9** — Plus Jakarta Sans font loading via expo-google-fonts (0.5h)
+6. **Close M0.5 D10** — Update repo CLAUDE.md with brand rules + composition discipline (0.5h)
+7. **M1 S3 remaining** — Apple Sign-In, Google OAuth, Face ID + Keychain (~2h after Email OTP works)
 
 ---
 
-## ══ MILESTONE 0.5: Design System Foundation — 11h ══
+## ══ MILESTONE 0.5: Design System Foundation — 11.5h ══
 
 *Foundation that didn't exist in the original plan. Built after S3 iterated 8 times trying to fix Login visuals — root cause was structural (no tokens enforcement + no primitives), not visual taste. M0.5 builds the design system that makes every screen after Login a composition exercise instead of a re-design exercise.*
 
@@ -27,6 +30,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | D3 | Primitive inventory for Login | primitive-inventory-login.md: 7 primitives MECE (Layout: ScreenFrame/Stack/Spacer · Atomic: Text/Button/Logo/Icon · Domain: TaglineRotator). Composition tree for Welcome documented | 0.5h | 0.5h | ✓ |
 | D4 | 8 primitives built with CVA | apps/mobile/components/: Text/Stack/Spacer/Logo/Icon/Button/ScreenFrame/TaglineRotator. Plus icons/AppleIcon/GoogleIcon/MailIcon/HobbyIcons (6 hobby SVGs). lib/cn.ts utility. CVA enforces variant types via TypeScript | 4h | 4h | ✓ |
 | D5 | ESLint anti-drift rules | apps/mobile/.eslintrc.js: blocks hex/rgb/hsl literals + scoped overrides for tokens + icon files. `npm run lint` integrated | 0.5h | 0.5h | ✓ |
+| D11 | ESLint v9 flat config migration | Replaced legacy .eslintrc.js with eslint.config.js (ESLint v9 dropped support for legacy format). Same rules preserved, exemptions scoped to `**/icons/**`, `Logo.tsx`, `ScreenFrame.tsx` (legitimate gradient rgba). Fixed 2 pre-existing lint errors (unescaped quotes in preview, unused var rule). `npm run lint` now actually enforces (was failing silently since D5) | 0.5h | 0.5h | ✓ |
 | D6 | Preview catalog (Storybook-lite) | apps/mobile/app/(preview)/index.tsx: renders all 8 primitives in all variants on device. Defers real Storybook web until 5+ screens (4-6h fricción with NativeWind v4 not worth it for v1) | 1h | 1h | ✓ |
 | D7 | Welcome refactor — cosmic-pill | Welcome rebuilt as pure composition. External `breeze-design` skill → cosmic-pill output translated to RN production code: wordmark + 3-tagline rotator + 3 oauth-glass pill buttons + footer disclaimer. Tokens.tagline variant added. Button.oauth-glass variant added. ScreenFrame.dark-hero updated to minimal sage glow + stronger vignette. **Zero hex literals, zero inline styles** | 1.5h | 1.5h | ✓ |
 | D8 | Husky pre-commit hook | .husky/pre-commit runs lint + ts:check; blocks commit if either fails. Lint-staged for incremental | 0.5h | — | ○ |
@@ -51,7 +55,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 |---|-------|---------------------|------|--------|--------|
 | 1 | Monorepo + Expo + NativeWind locked | Repo creado con apps/mobile + packages/, `npx expo start` corre, NativeWind aplica clases sin errors, design-tokens importable | 3h | 1.5h | ✓ |
 | 2 | Supabase project + schema + RLS | 3 tablas (companies, profiles, pauses) creadas via migrations versionadas, RLS testeada para los 3 casos (own, company-mate, foreign) | 3h | 1h | ✓ |
-| 3 | Auth: Google + Apple + Email OTP + Face ID | 4 métodos funcionan en device real, Face ID guarda token cifrado en Keychain, re-login funciona. **UI: locked vía M0.5 D7 (cosmic-pill).** Logic: pending. | 5h | ~8h burned | → |
+| 3 | Auth: Google + Apple + Email OTP + Face ID | 4 métodos funcionan en device real, Face ID guarda token cifrado en Keychain, re-login funciona. **UI: locked vía M0.5 D7. Phase 1: Supabase client + AuthContext adopted (cherry-picked from claude/zealous-jones-0b735a).** Phase 2-4 pending: TextInput primitive, email/otp screens refactored with primitives, welcome→email wire. Apple/Google/Face ID still pending after Email OTP. | 5h | ~9h burned | → |
 | 4 | Domain routing Edge Function | Edge Function `domain-router` recibe email → match con companies.domain → retorna `{route: 'onboarding' | 'waitlist' | 'cap_full'}` | 3h | — | ○ |
 | 5 | Onboarding quiz: hobbies + contexto + push permission | Quiz tipo personalidad (no formulario), guarda hobbies array + default_context en profile, pide push permission con copy claro | 4h | — | ○ |
 | 6 | Profile screen (editable) | Usuario edita hobbies, contexto default, ve streak count, ve trial_ends_at si aplica | 2h | — | ○ |
@@ -64,7 +68,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 **M1 ship criteria:** development build instalable en TestFlight interno, flujo completo funciona end-to-end con 1 empleado de prueba.
 
-**S3 status note (2026-05-10):** UI shell is locked from M0.5 D7 — Welcome screen done as cosmic-pill composition of primitives. Remaining S3 work is auth LOGIC only: Apple Sign-In (Supabase provider + Apple Service ID), Google OAuth flow, Email OTP (resend code), Face ID via expo-local-authentication + Keychain via expo-secure-store. Estimated remaining: ~3h.
+**S3 status note (2026-05-10):** UI shell is locked from M0.5 D7. **Phase 1 complete (2026-05-10):** Supabase client (`apps/mobile/lib/supabase.ts`) + AuthContext provider (`apps/mobile/features/auth/auth-context.tsx`) cherry-picked from abandoned `claude/zealous-jones-0b735a` branch (which iterated 8 commits without shipping). Root layout wraps `<AuthProvider>`. AsyncStorage installed for session persistence. Phase 2-4 plan: TextInput primitive (30min) → refactor email.tsx + otp.tsx (45min) → wire welcome→email (5min). Apple/Google/Face ID after Email OTP works (~2h).
 
 **External prerequisites — confirma ANTES de arrancar cada story (regla pre-flight):**
 
@@ -153,6 +157,14 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 [2026-05-10] [M1 S3] **UI portion complete via M0.5 D7.** Welcome screen is locked. Auth LOGIC still pending: Apple Sign-In with Supabase provider, Google OAuth flow, Email OTP via Supabase auth.signInWithOtp, Face ID via expo-local-authentication + Keychain via expo-secure-store. Estimated remaining: ~3h of original 5h. Currently TODO comments in welcome.tsx route everything to /(main).
 
 [2026-05-10] [process] **Mistake captured:** all M0.5 work was committed directly on `main` instead of a feature branch. No actual damage (working tree dirty, recoverable). Rule for future: every new milestone or major story starts with `git checkout -b feat/<scope>`. To be added to repo CLAUDE.md in M0.5 D10.
+
+[2026-05-10] [M1 S3 Phase 1] **Cherry-picked auth backend** from abandoned branch `claude/zealous-jones-0b735a`. After diff vs main: that branch had 8 commits, mostly UI iterations on Login that we discarded (M0.5 D7 cosmic-pill is superior). Two backend files were standalone and adoptable as-is: `lib/supabase.ts` (Supabase client w/ AsyncStorage) + `features/auth/auth-context.tsx` (AuthProvider with signInWithEmail OTP, verifyOtp, signOut; signInWithGoogle is a stub). Root `_layout.tsx` wrapped with `<AuthProvider>`. `@react-native-async-storage/async-storage@2.1.2` added to deps. Did NOT adopt: their login.tsx, email.tsx, otp.tsx (UI uses hex literals — to be rewritten with primitives in Phase 3). Branch + worktree subsequently deleted (commit b9d3cbb).
+
+[2026-05-10] [M0.5 D11] **ESLint v9 was failing silently since D5.** D5 created `.eslintrc.js` (legacy format) but ESLint v9 only reads `eslint.config.js` (flat config). `npm run lint` errored with "couldn't find eslint.config" but CI never blocked anything. Migrated to flat config using `eslint-config-expo/flat` baseline. Same anti-drift rules (no hex/rgb/hsl literals) preserved. Scoped exemptions: `**/icons/**` (SVG defaults), `Logo.tsx` (defensive), `ScreenFrame.tsx` (gradient rgba — TODO: tokenize as gradient token to remove this exemption). Fixed 2 pre-existing lint violations (`(preview)/index.tsx` unescaped quotes, `Icon.tsx` unused `_exhaustive` variable rule).
+
+[2026-05-10] [process] **Repo cleanup:** deleted 4 stale local branches (claude/angry-williamson-1bb661, claude/interesting-wescoff-03000e, claude/zealous-jones-0b735a, feature/m1-s1-monorepo-setup), 1 remote branch (origin/claude/interesting-wescoff-03000e), and 2 orphaned worktrees in `.claude/worktrees/`. Only `main` remains. Commits not lost (recoverable via `git reflog` for 30 days if needed).
+
+[2026-05-10] [M1 S2 follow-up] **`.env.local` recovered.** File was originally created in M1 S2 but lost between sessions (gitignored — never on remote, lives in working tree only). Recreated at `apps/mobile/.env.local` with EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_ANON_KEY (publishable key, sb_publishable_* format). Recommended: backup the publishable key in a password manager (1Password/Bitwarden) to avoid re-fetching from Supabase dashboard each time the file is lost.
 
 ---
 

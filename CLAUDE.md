@@ -37,9 +37,10 @@ These rules apply to EVERY task. If a task conflicts with these, pause and ask t
 
 ### Branching (regla #1)
 - **NUNCA push directo a `main`** después del primer deploy a producción
-- Cada feature/fix → nueva branch: `git checkout -b feature/[short-description]`
+- Cada feature/fix → nueva branch: `git checkout -b feat/[short-scope]` (también acepta `feature/[scope]` o `fix/[scope]`)
+- **Cada milestone o story significativa abre su propia branch desde `main`.** NUNCA acumular varias stories sobre main directo. Lección de M0.5: 8 commits aterrizaron en main sin branch — recoverable pero violaba la regla.
 - Probar en preview (TestFlight + Vercel Preview URL) antes de merge
-- Si algo rompe → `git checkout main && git branch -D feature/[name]`. Main nunca vio el código roto.
+- Si algo rompe → `git checkout main && git branch -D feat/[name]`. Main nunca vio el código roto.
 
 ### Secrets management
 - **NUNCA hardcodear API keys** en código
@@ -80,6 +81,21 @@ These rules apply to EVERY task. If a task conflicts with these, pause and ask t
   "tailwindcss": "^3.4.17"
   ```
   NativeWind 4.2.x require react-native-worklets (auto-instalado por reanimated 4).
+
+### Design System Rules (regla #3 — mandatory)
+
+Construido en M0.5 (2026-05-09 → 2026-05-10). Drift mathematically impossible: TypeScript rechaza variants inválidas, ESLint rechaza hex/rgb/hsl literals, Husky rechaza commits que no pasen ts:check + lint.
+
+- **NUNCA hardcodear** hex/rgb/hsl literals en código de app. Todos los colores vienen de `@breeze/design-tokens` (`colors.primary.DEFAULT`, `palette.sage[500]`, etc). ESLint bloquea con `no-restricted-syntax`. Excepciones scoped: `**/icons/**`, `Logo.tsx`, `ScreenFrame.tsx` (gradient rgba — TODO tokenize).
+- **SIEMPRE compose primitives** — toda nueva screen se construye desde `apps/mobile/components/` (Text, Stack, Spacer, Logo, Icon, Button, ScreenFrame, TaglineRotator, TextInput). Si necesitas un look nuevo, primero pregunta si encaja MECE como nueva primitive o variant antes de bajar a `<View>`/inline styles.
+- **SIEMPRE pasa el gate** — `npm run ts:check --workspace=apps/mobile` + `npm run lint --workspace=apps/mobile` corren via Husky pre-commit. Si una falla, fix antes de commit. NUNCA `--no-verify`.
+- **Token-first cambios visuales** — para cualquier ajuste visual: (1) update `packages/design-tokens/tokens.js`, (2) re-validar en `apps/mobile/app/(preview)/`, (3) después tocar componentes. NO al revés.
+- **Single source of truth:**
+  - Tokens canónicos: `packages/design-tokens/tokens.js`
+  - Brand brief: `Stopit/output/2026-05-05-breeze-brand-brief.md`
+  - Token spec MECE: `Stopit/output/2026-05-05-breeze-tokens.spec.md`
+  - Primitive inventory (Login): `Stopit/output/2026-05-05-primitive-inventory-login.md`
+- **Tipografía:** Plus Jakarta Sans (5 weights: 400/500/600/700/800) cargada en `app/_layout.tsx` via `@expo-google-fonts/plus-jakarta-sans`. Splash espera `fontsLoaded`. Cada variant del primitive `Text` se bindea a su font name específica (RN no resuelve weights dentro de una family).
 
 ### Subscription rules (Granola-style hybrid)
 - **NUNCA** implementar IAP custom — siempre via RevenueCat SDK

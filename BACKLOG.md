@@ -12,10 +12,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 1. **M1 S3 Phase 2** — TextInput primitive (~30 min, needed for email/otp screens)
 2. **M1 S3 Phase 3** — Refactor email.tsx + otp.tsx using primitives (~45 min, logic from claude/zealous-jones-0b735a)
 3. **M1 S3 Phase 4** — Wire welcome → email handoff (~5 min)
-4. **Close M0.5 D8** — Husky pre-commit hook (0.5h)
-5. **Close M0.5 D9** — Plus Jakarta Sans font loading via expo-google-fonts (0.5h)
-6. **Close M0.5 D10** — Update repo CLAUDE.md with brand rules + composition discipline (0.5h)
-7. **M1 S3 remaining** — Apple Sign-In, Google OAuth, Face ID + Keychain (~2h after Email OTP works)
+4. **M1 S3 remaining** — Apple Sign-In, Google OAuth, Face ID + Keychain (~2h after Email OTP works)
 
 ---
 
@@ -33,9 +30,9 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | D11 | ESLint v9 flat config migration | Replaced legacy .eslintrc.js with eslint.config.js (ESLint v9 dropped support for legacy format). Same rules preserved, exemptions scoped to `**/icons/**`, `Logo.tsx`, `ScreenFrame.tsx` (legitimate gradient rgba). Fixed 2 pre-existing lint errors (unescaped quotes in preview, unused var rule). `npm run lint` now actually enforces (was failing silently since D5) | 0.5h | 0.5h | ✓ |
 | D6 | Preview catalog (Storybook-lite) | apps/mobile/app/(preview)/index.tsx: renders all 8 primitives in all variants on device. Defers real Storybook web until 5+ screens (4-6h fricción with NativeWind v4 not worth it for v1) | 1h | 1h | ✓ |
 | D7 | Welcome refactor — cosmic-pill | Welcome rebuilt as pure composition. External `breeze-design` skill → cosmic-pill output translated to RN production code: wordmark + 3-tagline rotator + 3 oauth-glass pill buttons + footer disclaimer. Tokens.tagline variant added. Button.oauth-glass variant added. ScreenFrame.dark-hero updated to minimal sage glow + stronger vignette. **Zero hex literals, zero inline styles** | 1.5h | 1.5h | ✓ |
-| D8 | Husky pre-commit hook | .husky/pre-commit runs lint + ts:check; blocks commit if either fails. Lint-staged for incremental | 0.5h | — | ○ |
-| D9 | Plus Jakarta Sans loading | @expo-google-fonts/plus-jakarta-sans installed, 5 weights loaded in app/_layout.tsx via useFonts(), splash screen waits for fontsLoaded | 0.5h | — | ○ |
-| D10 | CLAUDE.md update with brand rules | Repo CLAUDE.md gets section: "DESIGN SYSTEM RULES (mandatory)" — never hardcode hex, always compose primitives, run ts:check + lint before commit, link to brand brief + token spec | 0.5h | — | ○ |
+| D8 | Husky pre-commit hook | .husky/pre-commit runs lint + ts:check; blocks commit if either fails. Lint-staged for incremental | 0.5h | — | ✓ |
+| D9 | Plus Jakarta Sans loading | @expo-google-fonts/plus-jakarta-sans installed, 5 weights loaded in app/_layout.tsx via useFonts(), splash screen waits for fontsLoaded | 0.5h | — | ✓ |
+| D10 | CLAUDE.md update with brand rules | Repo CLAUDE.md gets section: "DESIGN SYSTEM RULES (mandatory)" — never hardcode hex, always compose primitives, run ts:check + lint before commit, link to brand brief + token spec | 0.5h | — | ✓ |
 
 **M0.5 ship criteria:** any new screen built from here is **composition only** — primitives + tokens + composition tree. Drift mathematically impossible (TS rejects invalid variants, ESLint rejects hex literals, husky rejects bad commits).
 
@@ -165,6 +162,12 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 [2026-05-10] [process] **Repo cleanup:** deleted 4 stale local branches (claude/angry-williamson-1bb661, claude/interesting-wescoff-03000e, claude/zealous-jones-0b735a, feature/m1-s1-monorepo-setup), 1 remote branch (origin/claude/interesting-wescoff-03000e), and 2 orphaned worktrees in `.claude/worktrees/`. Only `main` remains. Commits not lost (recoverable via `git reflog` for 30 days if needed).
 
 [2026-05-10] [M1 S2 follow-up] **`.env.local` recovered.** File was originally created in M1 S2 but lost between sessions (gitignored — never on remote, lives in working tree only). Recreated at `apps/mobile/.env.local` with EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_ANON_KEY (publishable key, sb_publishable_* format). Recommended: backup the publishable key in a password manager (1Password/Bitwarden) to avoid re-fetching from Supabase dashboard each time the file is lost.
+
+[2026-05-10] [M0.5 D8] **Husky pre-commit hook wired.** Root `package.json` adds `husky@9.1.7` + `lint-staged@17.0.3` as devDeps + `prepare` script. `.husky/pre-commit` runs `npx lint-staged` (which calls `npm run lint --workspace=apps/mobile` when `apps/mobile/**/*.{ts,tsx}` is staged) then `npm run ts:check --workspace=apps/mobile`. Implementation note: lint-staged with file-level `eslint` from repo root failed because ESLint v9 flat config walks up from cwd (root has no config) and `import/resolver` can't find apps/mobile's tsconfig for `@/*` aliases. Pragmatic fix: lint-staged delegates to the workspace npm script so eslint runs from `apps/mobile/` cwd. Trade-off: full lint runs even for one staged file, but at <30 source files it's <1s. Revisit if/when web app adds a second workspace.
+
+[2026-05-10] [M0.5 D9] **Plus Jakarta Sans loading.** `@expo-google-fonts/plus-jakarta-sans@0.4.2` (exact, no caret per RN ecosystem rule) installed in `apps/mobile`. `app/_layout.tsx` calls `SplashScreen.preventAutoHideAsync()` before render, loads the 5 weights (400/500/600/700/800) via `useFonts`, hides splash inside an effect once `fontsLoaded`, returns `null` until ready. Bonus binding: `components/Text.tsx` adds a `VARIANT_TO_FONT_FAMILY` map and applies it via inline `style.fontFamily` per variant — without this, RN falls through to System font because expo-google-fonts registers each weight under its own canonical name (e.g. `PlusJakartaSans_500Medium`) and RN can't resolve weight within a single family. Without the binding, D9 would have shipped dead bytes.
+
+[2026-05-10] [M0.5 D10] **Repo CLAUDE.md updated.** New `### Design System Rules (regla #3 — mandatory)` subsection in HARD RULES: forbids hex/rgb/hsl literals (ESLint enforces), mandates composing from `apps/mobile/components/` primitives, requires ts:check + lint before commit (Husky enforces), points at canonical token files + brand brief + token spec, and records the typography binding pattern (5 PJS weights + Text primitive variant→family map). Branching section also reinforced with the M0.5 lesson: "Cada milestone o story significativa abre su propia branch desde main. NUNCA acumular varias stories sobre main directo." With this, M0.5 ship criteria is met — drift is mathematically impossible: TS rejects invalid variants, ESLint rejects hex literals, Husky rejects bad commits.
 
 ---
 

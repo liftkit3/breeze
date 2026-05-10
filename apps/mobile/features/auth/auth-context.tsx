@@ -65,7 +65,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo, skipBrowserRedirect: true },
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+        // Forces Google to show the account picker every time, even when the
+        // browser already has an active session. Without this, Google auto-
+        // signs the user in with their cached account.
+        queryParams: { prompt: "select_account" },
+      },
     });
     if (error) throw error;
     if (!data?.url) throw new Error("Supabase no devolvió la URL de OAuth.");

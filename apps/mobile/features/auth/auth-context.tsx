@@ -1,13 +1,20 @@
 import { Session } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../../lib/supabase";
+
+// Required so the in-app browser closes cleanly after the OAuth redirect.
+WebBrowser.maybeCompleteAuthSession();
+
+type SignInWithGoogleResult = "signed-in" | "canceled";
 
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
   signInWithEmail: (email: string) => Promise<void>;
   verifyOtp: (email: string, code: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<SignInWithGoogleResult>;
   signOut: () => Promise<void>;
 };
 
@@ -47,8 +54,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
-  const signInWithGoogle = async () => {
-    throw new Error("Google sign-in se habilita en Fase 2 (S3) tras configurar OAuth client.");
+  const signInWithGoogle = async (): Promise<SignInWithGoogleResult> => {
+    // Resolves to `breeze://auth-callback` in dev/standalone builds and to
+    // `exp://192.168.x.x:8081/--/auth-callback` in Expo Go. The explicit path
+    // matters: Supabase silently rejects custom-scheme URLs without a path,
+    // falling back to Site URL. Whichever URL this resolves to at runtime
+    // must be in Supabase Dashboard → Auth → URL Configuration → Redirect URLs.
+    const redirectTo = makeRedirectUri({ scheme: "breeze", path: "auth-callback" });
+    if (__DEV__) console.log("[Breeze auth] OAuth redirect URL:", redirectTo);
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+        // Forces Google to show the account picker every time, even when the
+        // browser already has an active session. Without this, Google auto-
+        // signs the user in with their cached account.
+        queryParams: { prompt: "select_account" },
+      },
+    });
+    if (error) throw error;
+    if (!data?.url) throw new Error("Supabase no devolvió la URL de OAuth.");
+    if (__DEV__) console.log("[Breeze auth] Supabase OAuth URL:", data.url);
+
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+
+    if (result.type === "cancel" || result.type === "dismiss") return "canceled";
+    if (result.type !== "success" || !result.url) {
+      throw new Error(`Flujo OAuth terminó en estado: ${result.type}`);
+    }
+
+    // Supabase returns access + refresh tokens in the URL fragment.
+    const fragment = result.url.split("#")[1] ?? "";
+    const params = new URLSearchParams(fragment);
+    const access_token = params.get("access_token");
+    const refresh_token = params.get("refresh_token");
+
+    if (!access_token || !refresh_token) {
+      throw new Error("OAuth no devolvió tokens válidos.");
+    }
+
+    const { error: setErr } = await supabase.auth.setSession({ access_token, refresh_token });
+    if (setErr) throw setErr;
+    return "signed-in";
   };
 
   const signOut = async () => {

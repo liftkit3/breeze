@@ -150,7 +150,7 @@ export default function PreviewCatalog() {
             <Stack gap="lg" align="center">
               <Logo size={24} withWordmark light />
               <Text variant="bodySm" color="inverse" align="center">
-                "Tengo tiempo, hice algo que disfruto."
+                &ldquo;Tengo tiempo, hice algo que disfruto.&rdquo;
               </Text>
               <Stack gap="sm" className="w-full">
                 <Button variant="oauth-light" fullWidth iconLeft={<Icon name="apple" />} onPress={() => {}}>

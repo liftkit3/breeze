@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Expo Go. Whichever it is must be allow-listed in Supabase Dashboard
     // → Authentication → URL Configuration → Redirect URLs.
     const redirectTo = makeRedirectUri({ scheme: "breeze" });
+    if (__DEV__) console.log("[Breeze auth] OAuth redirect URL:", redirectTo);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",

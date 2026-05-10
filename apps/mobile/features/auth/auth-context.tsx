@@ -76,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw error;
     if (!data?.url) throw new Error("Supabase no devolvió la URL de OAuth.");
+    if (__DEV__) console.log("[Breeze auth] Supabase OAuth URL:", data.url);
 
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 

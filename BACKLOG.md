@@ -9,10 +9,10 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 ## ⚡ Next up (pick from here)
 
-1. **M1 S3 Phase 2** — TextInput primitive (~30 min, needed for email/otp screens)
-2. **M1 S3 Phase 3** — Refactor email.tsx + otp.tsx using primitives (~45 min, logic from claude/zealous-jones-0b735a)
-3. **M1 S3 Phase 4** — Wire welcome → email handoff (~5 min)
-4. **M1 S3 remaining** — Apple Sign-In, Google OAuth, Face ID + Keychain (~2h after Email OTP works)
+1. **M1 S4** — Domain routing Edge Function (~3h, no external deps; unblocks B2B company match)
+2. **M1 S5** — Onboarding quiz: hobbies + contexto + push permission (~4h, currently `/(onboarding)/hobbies` is the verified-screen target so this lights up the dead end)
+3. **M1 S8** — Push notification infra (~3h, prerequisite for S10's notification-triggered pauses)
+4. **M1.5 S18** — Apple Sign-In + Face ID (deferred from S3, requires Apple Developer $99/año — pair with S16 App Store Connect setup)
 
 ---
 
@@ -52,7 +52,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 |---|-------|---------------------|------|--------|--------|
 | 1 | Monorepo + Expo + NativeWind locked | Repo creado con apps/mobile + packages/, `npx expo start` corre, NativeWind aplica clases sin errors, design-tokens importable | 3h | 1.5h | ✓ |
 | 2 | Supabase project + schema + RLS | 3 tablas (companies, profiles, pauses) creadas via migrations versionadas, RLS testeada para los 3 casos (own, company-mate, foreign) | 3h | 1h | ✓ |
-| 3 | Auth: Google + Apple + Email OTP + Face ID | 4 métodos funcionan en device real, Face ID guarda token cifrado en Keychain, re-login funciona. **UI: locked vía M0.5 D7. Phase 1: Supabase client + AuthContext adopted (cherry-picked from claude/zealous-jones-0b735a).** Phase 2-4 pending: TextInput primitive, email/otp screens refactored with primitives, welcome→email wire. Apple/Google/Face ID still pending after Email OTP. | 5h | ~9h burned | → |
+| 3 | Auth: Email OTP + Google OAuth | Email OTP funciona end-to-end (Supabase + Resend SMTP, 6 dígitos, auto-verify a los 400ms, navigate a /verified). Google OAuth funciona end-to-end via `expo-web-browser` + `supabase.auth.signInWithOAuth` (in-app browser, `prompt=select_account`, deep-link `exp://…/--/auth-callback` o `breeze://auth-callback`, sesión persistida en AsyncStorage). Apple + Face ID **deferred a M1.5** (ambos requieren Apple Developer subscription $99/año). | 5h | ~10h | ✓ |
 | 4 | Domain routing Edge Function | Edge Function `domain-router` recibe email → match con companies.domain → retorna `{route: 'onboarding' | 'waitlist' | 'cap_full'}` | 3h | — | ○ |
 | 5 | Onboarding quiz: hobbies + contexto + push permission | Quiz tipo personalidad (no formulario), guarda hobbies array + default_context en profile, pide push permission con copy claro | 4h | — | ○ |
 | 6 | Profile screen (editable) | Usuario edita hobbies, contexto default, ve streak count, ve trial_ends_at si aplica | 2h | — | ○ |
@@ -65,13 +65,13 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 **M1 ship criteria:** development build instalable en TestFlight interno, flujo completo funciona end-to-end con 1 empleado de prueba.
 
-**S3 status note (2026-05-10):** UI shell is locked from M0.5 D7. **Phase 1 complete (2026-05-10):** Supabase client (`apps/mobile/lib/supabase.ts`) + AuthContext provider (`apps/mobile/features/auth/auth-context.tsx`) cherry-picked from abandoned `claude/zealous-jones-0b735a` branch (which iterated 8 commits without shipping). Root layout wraps `<AuthProvider>`. AsyncStorage installed for session persistence. Phase 2-4 plan: TextInput primitive (30min) → refactor email.tsx + otp.tsx (45min) → wire welcome→email (5min). Apple/Google/Face ID after Email OTP works (~2h).
+**S3 closed (2026-05-10):** Email OTP + Google OAuth shipped end-to-end on branch `feat/m1-s3-email-flow` (10 commits, merged via PR). Apple Sign-In + Face ID + Keychain re-login **moved to M1.5 story 18** because both require an active Apple Developer subscription that hasn't been purchased yet — pairing them with App Store Connect setup is cheaper than burning Apple Dev cycles in isolation.
 
 **External prerequisites — confirma ANTES de arrancar cada story (regla pre-flight):**
 
 | Story | Requires |
 |-------|----------|
-| S3 | Apple Developer account ($99/año, ~24h activación) · Google Cloud OAuth Client (Web + iOS bundle ID) · Apple Sign-In Service ID + Key (.p8) + Team ID + Key ID · Supabase Auth providers configurados (Google + Apple) en dashboard · iOS device físico para Face ID |
+| S3 (shipped scope) | Google Cloud OAuth Web Client (Authorized redirect: `https://<project>.supabase.co/auth/v1/callback`) · Supabase Google provider habilitado · Resend custom SMTP en Supabase + ambos templates ("Confirm signup" + "Magic Link") con `{{ .Token }}` |
 | S4 | Ninguna externa (Edge Functions auto-enabled con el proyecto Supabase) |
 | S7 | Google Cloud Console: Calendar API habilitada · scope `calendar.readonly` añadido al OAuth client de S3 · cuenta Google con eventos reales para testing de gaps |
 | S8 | EAS account (Expo) configurada · APN cert para iOS push (vía EAS, no se necesita Apple Developer extra) |
@@ -90,8 +90,9 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | 15 | SEO scaffolding | Meta tags + OG images dinámicas (generateMetadata) + sitemap.xml (next-sitemap) + robots.txt + JSON-LD SoftwareApplication | 2h | — | ○ |
 | 16 | App Store Connect + Google Play setup | Apps creadas en ambos stores, 5+ screenshots por device size, ASO copy (title + subtitle + keywords), ATT prompt config, privacy nutrition labels | 3h | — | ○ |
 | 17 | TestFlight + Play Internal submission | Build production sube a TestFlight + Internal Testing track, 1 tester invitado prueba flow completo | 2h | — | ○ |
+| 18 | Auth: Apple Sign-In + Face ID re-login | Apple Sign-In via `expo-apple-authentication` + `supabase.auth.signInWithIdToken({provider:'apple'})` funciona en device real. Face ID re-login via `expo-local-authentication` + `expo-secure-store` (refresh token guardado bajo biometric flag). Welcome screen Apple button + Face ID prompt en cold-start si sesión existe. Deferred desde S3 (requiere Apple Developer $99/año). | 2h | — | ○ |
 
-**M1.5 ship criteria:** breeze.app live, app instalable via TestFlight link, App Store review submission ready.
+**M1.5 ship criteria:** breeze.app live, app instalable via TestFlight link, App Store review submission ready, Apple Sign-In funcional (App Store rule cuando hay Google sign-in).
 
 ---
 
@@ -162,6 +163,8 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 [2026-05-10] [process] **Repo cleanup:** deleted 4 stale local branches (claude/angry-williamson-1bb661, claude/interesting-wescoff-03000e, claude/zealous-jones-0b735a, feature/m1-s1-monorepo-setup), 1 remote branch (origin/claude/interesting-wescoff-03000e), and 2 orphaned worktrees in `.claude/worktrees/`. Only `main` remains. Commits not lost (recoverable via `git reflog` for 30 days if needed).
 
 [2026-05-10] [M1 S2 follow-up] **`.env.local` recovered.** File was originally created in M1 S2 but lost between sessions (gitignored — never on remote, lives in working tree only). Recreated at `apps/mobile/.env.local` with EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_ANON_KEY (publishable key, sb_publishable_* format). Recommended: backup the publishable key in a password manager (1Password/Bitwarden) to avoid re-fetching from Supabase dashboard each time the file is lost.
+
+[2026-05-10] [M1 S3] **S3 closed: Email OTP + Google OAuth shipped on `feat/m1-s3-email-flow` (10 commits).** Branch built (1) Email OTP flow: `email.tsx` → `otp.tsx` → `verified.tsx` screens + 3 new primitives (`BackBar`, `TextInput.glass-dark`, `OTPInput`) + 2 Button variants (`primary-pill`, `glass-disabled`) + 2 icons (`chevron-left`, `check`). Real OTP delivery via Resend custom SMTP after fixing two infra footguns: Supabase's "Confirm signup" template was missing `{{ .Token }}` and Resend was in sandbox mode (only delivers to account owner `liftkit3@gmail.com`). (2) Google OAuth via `expo-web-browser` + `supabase.auth.signInWithOAuth`. Three iterations to get the redirect right: bare `exp://192.168.x.x:8081` (Supabase silently rejected → fell back to Site URL = localhost), then with path `/--/auth-callback` (matched). `prompt=select_account` passed through queryParams. **Site URL changed from `http://localhost:3000` to `exp://192.168.40.89:8081/--/auth-callback`** as belt-and-suspenders fallback for dev — needs to change to `breeze://auth-callback` once we move to `expo run:ios` dev build. **Apple Sign-In + Face ID deferred to M1.5 story 18** (Apple Developer $99/año not purchased yet). Login screen wired: Welcome → Email button pushes `/email`, Google button calls `signInWithGoogle()` and replaces to `/verified` on success. (3) Dev-experience patches: filtered the "No native splash screen registered" error at `console.error` level (expo-router fires it on OAuth re-mount in Expo Go; harmless but noisy). Also fixed OTP keyboard not popping on box tap (replaced absolute-positioned opacity-0 input with off-screen `left:-9999` input + per-box `Pressable` that calls `inputRef.current.focus()`).
 
 [2026-05-10] [M0.5 D8] **Husky pre-commit hook wired.** Root `package.json` adds `husky@9.1.7` + `lint-staged@17.0.3` as devDeps + `prepare` script. `.husky/pre-commit` runs `npx lint-staged` (which calls `npm run lint --workspace=apps/mobile` when `apps/mobile/**/*.{ts,tsx}` is staged) then `npm run ts:check --workspace=apps/mobile`. Implementation note: lint-staged with file-level `eslint` from repo root failed because ESLint v9 flat config walks up from cwd (root has no config) and `import/resolver` can't find apps/mobile's tsconfig for `@/*` aliases. Pragmatic fix: lint-staged delegates to the workspace npm script so eslint runs from `apps/mobile/` cwd. Trade-off: full lint runs even for one staged file, but at <30 source files it's <1s. Revisit if/when web app adds a second workspace.
 

@@ -9,10 +9,15 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 ## ⚡ Next up (pick from here)
 
-1. **M1 S4** — Domain routing Edge Function (~3h, no external deps; unblocks B2B company match)
-2. **M1 S5** — Onboarding quiz: hobbies + contexto + push permission (~4h, currently `/(onboarding)/hobbies` is the verified-screen target so this lights up the dead end)
-3. **M1 S8** — Push notification infra (~3h, prerequisite for S10's notification-triggered pauses)
-4. **M1.5 S18** — Apple Sign-In + Face ID (deferred from S3, requires Apple Developer $99/año — pair with S16 App Store Connect setup)
+Focus: get the manual end-to-end loop working (onboarding → home → pause → activity → feedback) before bolting on push triggers, multi-tenant routing, or compliance polish. Validate that the model is fun first; productionize after.
+
+1. **M1 S5** — Onboarding quiz: hobbies + contexto + push permission (~4h, lights up the `/(onboarding)/hobbies` route the verified screen already points to)
+2. **M1 S9** — Home screen with manual "pausa ahora" CTA (~3h, becomes the destination after onboarding)
+3. **M1 S10** — Pause Bottom Sheet + Claude API Edge Function (~4h, the "magic" of the product)
+4. **M1 S11** — Pause timer screen + completion flow (~2h)
+5. **M1 S12** — Post-pause feedback screen (~1h)
+6. **M1 S8** — Push notification infra (~3h, after manual loop validates)
+7. **M1.5 polish bundle** — Apple Sign-In + Resend prod sender + Google consent branding + Domain router (S18-S21, deferred from S3/S4 pending Apple Developer + `breeze.app` purchase)
 
 ---
 
@@ -44,7 +49,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 ---
 
-## ══ MILESTONE 1: Mobile MVP Core — 38h ══
+## ══ MILESTONE 1: Mobile MVP Core — 35h ══
 
 *El core loop. Un empleado de empresa-cliente puede recibir una notificación, hacer una pausa, y volver a trabajar. Shippeable internamente (TestFlight con primera empresa).*
 
@@ -53,8 +58,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | 1 | Monorepo + Expo + NativeWind locked | Repo creado con apps/mobile + packages/, `npx expo start` corre, NativeWind aplica clases sin errors, design-tokens importable | 3h | 1.5h | ✓ |
 | 2 | Supabase project + schema + RLS | 3 tablas (companies, profiles, pauses) creadas via migrations versionadas, RLS testeada para los 3 casos (own, company-mate, foreign) | 3h | 1h | ✓ |
 | 3 | Auth: Email OTP + Google OAuth | Email OTP funciona end-to-end (Supabase + Resend SMTP, 6 dígitos, auto-verify a los 400ms, navigate a /verified). Google OAuth funciona end-to-end via `expo-web-browser` + `supabase.auth.signInWithOAuth` (in-app browser, `prompt=select_account`, deep-link `exp://…/--/auth-callback` o `breeze://auth-callback`, sesión persistida en AsyncStorage). Apple + Face ID **deferred a M1.5** (ambos requieren Apple Developer subscription $99/año). | 5h | ~10h | ✓ |
-| 4 | Domain routing Edge Function | Edge Function `domain-router` recibe email → match con companies.domain → retorna `{route: 'onboarding' | 'waitlist' | 'cap_full'}` | 3h | — | ○ |
-| 5 | Onboarding quiz: hobbies + contexto + push permission | Quiz tipo personalidad (no formulario), guarda hobbies array + default_context en profile, pide push permission con copy claro | 4h | — | ○ |
+| 5 | Onboarding quiz: hobbies + contexto + push permission | Quiz tipo personalidad (no formulario), guarda hobbies array + default_context en profile, pide push permission con copy claro. **In M1 todos los usuarios van al mismo onboarding** — la diferenciación B2C vs B2B se hace en M1.5 S21 (Domain Router) antes del primer launch real. | 4h | — | ○ |
 | 6 | Profile screen (editable) | Usuario edita hobbies, contexto default, ve streak count, ve trial_ends_at si aplica | 2h | — | ○ |
 | 7 | Google Calendar OAuth + token encryption + gap detection | Calendar conecta, refresh token cifrado con pgcrypto en profiles.calendar_token, Edge Function `detect-calendar-gaps` encuentra gaps de 30+ min | 5h | — | ○ |
 | 8 | Push notification infra | Token Expo guardado en profile.push_token, Edge Function `send-pause-notification` lista (vacía pero deployada), permission flow OK | 3h | — | ○ |
@@ -65,26 +69,26 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 **M1 ship criteria:** development build instalable en TestFlight interno, flujo completo funciona end-to-end con 1 empleado de prueba.
 
-**S3 closed (2026-05-10):** Email OTP + Google OAuth shipped end-to-end on branch `feat/m1-s3-email-flow` (10 commits, merged via PR #4). Three follow-ups deferred to M1.5 because they all depend on the `breeze.app` domain (S13):
+**S3 closed (2026-05-10):** Email OTP + Google OAuth shipped end-to-end on branch `feat/m1-s3-email-flow` (10 commits, merged via PR #4). Four follow-ups deferred to M1.5 — strategy is "validate the model works manually before adding multi-tenant routing or pre-launch polish":
 - **S18** — Apple Sign-In + Face ID + Keychain re-login (needs Apple Developer $99/año subscription).
-- **S19** — Resend production sender: currently in sandbox mode, only delivers to `liftkit3@gmail.com`. Verifying `breeze.app` in Resend + swapping the Supabase SMTP sender unlocks OTP to any recipient.
-- **S20** — Google OAuth consent screen: currently shows "Sign in to continue to xkzpehqgbrngkfyxaeju.supabase.co" instead of "Breeze". App name + support email are set, but full branding requires App domain + privacy/terms URLs from S14.
+- **S19** — Resend production sender: currently sandbox-locked to `liftkit3@gmail.com`. Verifying `breeze.app` in Resend + swapping the Supabase SMTP sender unlocks OTP to any recipient.
+- **S20** — Google OAuth consent screen: currently shows the supabase.co URL instead of "Breeze". App name + support email are set, but full branding requires App domain + privacy/terms URLs from S14.
+- **S21** — Domain Router Edge Function: moved out of M1 to M1.5 (2026-05-10 decision). Without it, every signed-up user lands in the same generic onboarding. We validate the manual loop first (S5 → S9 → S10 → S11 → S12), then before launch we add the B2C/B2B fork.
 
 **External prerequisites — confirma ANTES de arrancar cada story (regla pre-flight):**
 
 | Story | Requires |
 |-------|----------|
 | S3 (shipped scope) | Google Cloud OAuth Web Client (Authorized redirect: `https://<project>.supabase.co/auth/v1/callback`) · Supabase Google provider habilitado · Resend custom SMTP en Supabase + ambos templates ("Confirm signup" + "Magic Link") con `{{ .Token }}` |
-| S4 | Ninguna externa (Edge Functions auto-enabled con el proyecto Supabase) |
 | S7 | Google Cloud Console: Calendar API habilitada · scope `calendar.readonly` añadido al OAuth client de S3 · cuenta Google con eventos reales para testing de gaps |
 | S8 | EAS account (Expo) configurada · APN cert para iOS push (vía EAS, no se necesita Apple Developer extra) |
 | S10 | CLAUDE_API_KEY (cuenta Anthropic con billing activo) · key seteada como secret en Supabase Edge Functions |
 
 ---
 
-## ══ MILESTONE 1.5: Marketing Web + App Store Compliance — 14h ══
+## ══ MILESTONE 1.5: Pre-launch infra + marketing + compliance — 20h ══
 
-*Landing público + waitlist + Privacy/Terms. Bloqueante para App Store review (URLs públicas obligatorias).*
+*Landing público + waitlist + Privacy/Terms + auth/infra completos antes del primer launch real (Apple Sign-In, Resend production sender, Google OAuth consent branding, Domain Router for B2C/B2B fork). Bloqueante para App Store review (URLs públicas obligatorias) y para multi-tenant real.*
 
 | # | Story | Acceptance criteria | Est. | Actual | Status |
 |---|-------|---------------------|------|--------|--------|
@@ -96,8 +100,9 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | 18 | Auth: Apple Sign-In + Face ID re-login | Apple Sign-In via `expo-apple-authentication` + `supabase.auth.signInWithIdToken({provider:'apple'})` funciona en device real. Face ID re-login via `expo-local-authentication` + `expo-secure-store` (refresh token guardado bajo biometric flag). Welcome screen Apple button + Face ID prompt en cold-start si sesión existe. Deferred desde S3 (requiere Apple Developer $99/año). | 2h | — | ○ |
 | 19 | Resend production: verify breeze.app domain + swap sender | Resend Dashboard → Domains → add `breeze.app` → DKIM/SPF/DMARC records added at registrar → all green. Supabase SMTP "Sender email" cambiado de `onboarding@resend.dev` (sandbox, solo entrega a `liftkit3@gmail.com`) a `noreply@breeze.app`. OTP emails llegan a cualquier recipient. Deferred from S3 (depends on S13 breeze.app registered). | 0.5h | — | ○ |
 | 20 | Google OAuth consent screen: full production branding | OAuth consent screen completo en Google Cloud Console: App domain (`breeze.app`), Application home page, Privacy policy URL (from S14), Terms URL (from S14). Authorized domain `breeze.app` añadido. Branding muestra "Sign in to continue to **Breeze**" (no el supabase.co URL) para usuarios externos no-owner del project. Optional: submit for verification si el app sale del 100-user testing cap. Deferred from S3 (depends on S13 + S14 URLs públicos). | 0.5h | — | ○ |
+| 21 | Domain Router Edge Function (B2C/B2B fork) | Edge Function `domain-router` recibe email → match con `companies.domain` → retorna `{ route: 'onboarding' \| 'waitlist' \| 'cap_full' }`. App routea post-verified según la respuesta. Sin esto todos los users entran al mismo onboarding (OK para M1 dev/test, no para launch real con empresas pagantes). Moved from M1 S4 a M1.5 (2026-05-10) — decision: validar primero que el core loop funcione manualmente. | 3h | — | ○ |
 
-**M1.5 ship criteria:** breeze.app live, app instalable via TestFlight link, App Store review submission ready, Apple Sign-In funcional (App Store rule cuando hay Google sign-in), Resend entregando a cualquier recipient (no sandbox), Google consent screen mostrando "Breeze" para todos los usuarios.
+**M1.5 ship criteria:** breeze.app live, app instalable via TestFlight link, App Store review submission ready, Apple Sign-In funcional (App Store rule cuando hay Google sign-in), Resend entregando a cualquier recipient (no sandbox), Google consent screen mostrando "Breeze" para todos los usuarios, Domain Router routeando B2C vs B2B correctamente.
 
 ---
 
@@ -168,6 +173,8 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 [2026-05-10] [process] **Repo cleanup:** deleted 4 stale local branches (claude/angry-williamson-1bb661, claude/interesting-wescoff-03000e, claude/zealous-jones-0b735a, feature/m1-s1-monorepo-setup), 1 remote branch (origin/claude/interesting-wescoff-03000e), and 2 orphaned worktrees in `.claude/worktrees/`. Only `main` remains. Commits not lost (recoverable via `git reflog` for 30 days if needed).
 
 [2026-05-10] [M1 S2 follow-up] **`.env.local` recovered.** File was originally created in M1 S2 but lost between sessions (gitignored — never on remote, lives in working tree only). Recreated at `apps/mobile/.env.local` with EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_ANON_KEY (publishable key, sb_publishable_* format). Recommended: backup the publishable key in a password manager (1Password/Bitwarden) to avoid re-fetching from Supabase dashboard each time the file is lost.
+
+[2026-05-10] [process] **S4 (Domain Router) moved from M1 to M1.5 as S21.** Founder decision: focus M1 on getting the core loop (signup → onboarding → home → pause → activity → feedback) working manually end-to-end before adding the B2C/B2B routing fork. Domain Router becomes pre-launch infra (M1.5) alongside Apple Sign-In, Resend production sender, and Google OAuth consent branding. M1 total estimate down from 38h → 35h. M1.5 up from 14h → 20h (the 6h delta = S18 Apple 2h + S19 Resend 0.5h + S20 Google consent 0.5h + S21 Domain Router 3h). Project total unchanged at ~101h since work is moving across milestones, not added. M1 ship criteria unchanged (TestFlight internal with 1 employee) since in M1 we can manually set `profile.company_id` for the test user. M1.5 ship criteria adds "Domain Router routing B2C vs B2B correctly" before any external launch.
 
 [2026-05-10] [M1 S3] **S3 closed: Email OTP + Google OAuth shipped on `feat/m1-s3-email-flow` (10 commits).** Branch built (1) Email OTP flow: `email.tsx` → `otp.tsx` → `verified.tsx` screens + 3 new primitives (`BackBar`, `TextInput.glass-dark`, `OTPInput`) + 2 Button variants (`primary-pill`, `glass-disabled`) + 2 icons (`chevron-left`, `check`). Real OTP delivery via Resend custom SMTP after fixing two infra footguns: Supabase's "Confirm signup" template was missing `{{ .Token }}` and Resend was in sandbox mode (only delivers to account owner `liftkit3@gmail.com`). (2) Google OAuth via `expo-web-browser` + `supabase.auth.signInWithOAuth`. Three iterations to get the redirect right: bare `exp://192.168.x.x:8081` (Supabase silently rejected → fell back to Site URL = localhost), then with path `/--/auth-callback` (matched). `prompt=select_account` passed through queryParams. **Site URL changed from `http://localhost:3000` to `exp://192.168.40.89:8081/--/auth-callback`** as belt-and-suspenders fallback for dev — needs to change to `breeze://auth-callback` once we move to `expo run:ios` dev build. **Apple Sign-In + Face ID deferred to M1.5 story 18** (Apple Developer $99/año not purchased yet). Login screen wired: Welcome → Email button pushes `/email`, Google button calls `signInWithGoogle()` and replaces to `/verified` on success. (3) Dev-experience patches: filtered the "No native splash screen registered" error at `console.error` level (expo-router fires it on OAuth re-mount in Expo Go; harmless but noisy). Also fixed OTP keyboard not popping on box tap (replaced absolute-positioned opacity-0 input with off-screen `left:-9999` input + per-box `Pressable` that calls `inputRef.current.focus()`).
 

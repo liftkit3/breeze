@@ -1,9 +1,45 @@
 # Breeze — BACKLOG
 
-Generated: 2026-05-03
+Generated: 2026-05-03 · Updated: 2026-05-10
 Based on: scope workplan + build decisions (Camino B híbrido B2C+B2B)
-Total estimado: ~90h | Ship target: 20 junio 2026
+Total estimado: ~101h | Ship target: 20 junio 2026
 Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
+
+---
+
+## ⚡ Next up (pick from here)
+
+1. **Close M0.5 D8** — Husky pre-commit hook (0.5h) → blocks any future drift before commit
+2. **Close M0.5 D9** — Plus Jakarta Sans font loading via expo-google-fonts (0.5h) → pixel-perfect typography
+3. **Close M0.5 D10** — Update repo CLAUDE.md with brand rules + composition discipline (0.5h) → future agents won't bypass system
+4. **Resume M1 S3** — Real OAuth wiring (UI is locked from M0.5; only auth logic pending) (~3h remaining of original 5h estimate)
+
+---
+
+## ══ MILESTONE 0.5: Design System Foundation — 11h ══
+
+*Foundation that didn't exist in the original plan. Built after S3 iterated 8 times trying to fix Login visuals — root cause was structural (no tokens enforcement + no primitives), not visual taste. M0.5 builds the design system that makes every screen after Login a composition exercise instead of a re-design exercise.*
+
+| # | Story | Acceptance criteria | Est. | Actual | Status |
+|---|-------|---------------------|------|--------|--------|
+| D1 | Brand brief + tokens MECE spec | brand-brief.md (7-question vibe input) + tokens.spec.md (full MECE: color/spacing/typography/radius/shadow/motion/z-index/sizing/breakpoints) committed in /Stopit/output | 1h | 1h | ✓ |
+| D2 | Tokens canonical source (tokens.js) | packages/design-tokens/tokens.js: 14 color groups (raw palette + semantic), 8pt spacing, full radius/shadow/motion/z-index/sizing/textStyles tokens. tailwindTheme adapter consumed by apps/mobile/tailwind.config.js | 1h | 1h | ✓ |
+| D3 | Primitive inventory for Login | primitive-inventory-login.md: 7 primitives MECE (Layout: ScreenFrame/Stack/Spacer · Atomic: Text/Button/Logo/Icon · Domain: TaglineRotator). Composition tree for Welcome documented | 0.5h | 0.5h | ✓ |
+| D4 | 8 primitives built with CVA | apps/mobile/components/: Text/Stack/Spacer/Logo/Icon/Button/ScreenFrame/TaglineRotator. Plus icons/AppleIcon/GoogleIcon/MailIcon/HobbyIcons (6 hobby SVGs). lib/cn.ts utility. CVA enforces variant types via TypeScript | 4h | 4h | ✓ |
+| D5 | ESLint anti-drift rules | apps/mobile/.eslintrc.js: blocks hex/rgb/hsl literals + scoped overrides for tokens + icon files. `npm run lint` integrated | 0.5h | 0.5h | ✓ |
+| D6 | Preview catalog (Storybook-lite) | apps/mobile/app/(preview)/index.tsx: renders all 8 primitives in all variants on device. Defers real Storybook web until 5+ screens (4-6h fricción with NativeWind v4 not worth it for v1) | 1h | 1h | ✓ |
+| D7 | Welcome refactor — cosmic-pill | Welcome rebuilt as pure composition. External `breeze-design` skill → cosmic-pill output translated to RN production code: wordmark + 3-tagline rotator + 3 oauth-glass pill buttons + footer disclaimer. Tokens.tagline variant added. Button.oauth-glass variant added. ScreenFrame.dark-hero updated to minimal sage glow + stronger vignette. **Zero hex literals, zero inline styles** | 1.5h | 1.5h | ✓ |
+| D8 | Husky pre-commit hook | .husky/pre-commit runs lint + ts:check; blocks commit if either fails. Lint-staged for incremental | 0.5h | — | ○ |
+| D9 | Plus Jakarta Sans loading | @expo-google-fonts/plus-jakarta-sans installed, 5 weights loaded in app/_layout.tsx via useFonts(), splash screen waits for fontsLoaded | 0.5h | — | ○ |
+| D10 | CLAUDE.md update with brand rules | Repo CLAUDE.md gets section: "DESIGN SYSTEM RULES (mandatory)" — never hardcode hex, always compose primitives, run ts:check + lint before commit, link to brand brief + token spec | 0.5h | — | ○ |
+
+**M0.5 ship criteria:** any new screen built from here is **composition only** — primitives + tokens + composition tree. Drift mathematically impossible (TS rejects invalid variants, ESLint rejects hex literals, husky rejects bad commits).
+
+**Deferred / known gaps:**
+- breezeFloat animation on hobby icons (decoration drifts gently — saves 30min, looks fine static)
+- expo-blur for glass buttons real backdrop blur (using rgba semi-transparent — ~80% of the look)
+- Real Storybook web deploy (when 5+ screens exist)
+- Chromatic visual regression in CI (when team grows)
 
 ---
 
@@ -15,7 +51,7 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 |---|-------|---------------------|------|--------|--------|
 | 1 | Monorepo + Expo + NativeWind locked | Repo creado con apps/mobile + packages/, `npx expo start` corre, NativeWind aplica clases sin errors, design-tokens importable | 3h | 1.5h | ✓ |
 | 2 | Supabase project + schema + RLS | 3 tablas (companies, profiles, pauses) creadas via migrations versionadas, RLS testeada para los 3 casos (own, company-mate, foreign) | 3h | 1h | ✓ |
-| 3 | Auth: Google + Apple + Email OTP + Face ID | 4 métodos funcionan en device real, Face ID guarda token cifrado en Keychain, re-login funciona | 5h | — | ○ |
+| 3 | Auth: Google + Apple + Email OTP + Face ID | 4 métodos funcionan en device real, Face ID guarda token cifrado en Keychain, re-login funciona. **UI: locked vía M0.5 D7 (cosmic-pill).** Logic: pending. | 5h | ~8h burned | → |
 | 4 | Domain routing Edge Function | Edge Function `domain-router` recibe email → match con companies.domain → retorna `{route: 'onboarding' | 'waitlist' | 'cap_full'}` | 3h | — | ○ |
 | 5 | Onboarding quiz: hobbies + contexto + push permission | Quiz tipo personalidad (no formulario), guarda hobbies array + default_context en profile, pide push permission con copy claro | 4h | — | ○ |
 | 6 | Profile screen (editable) | Usuario edita hobbies, contexto default, ve streak count, ve trial_ends_at si aplica | 2h | — | ○ |
@@ -27,6 +63,8 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | 12 | Post-pause feedback screen | "¿Cómo te sentiste?" (3 emoji buttons), guarda en pauses, muestra streak update animado | 1h | — | ○ |
 
 **M1 ship criteria:** development build instalable en TestFlight interno, flujo completo funciona end-to-end con 1 empleado de prueba.
+
+**S3 status note (2026-05-10):** UI shell is locked from M0.5 D7 — Welcome screen done as cosmic-pill composition of primitives. Remaining S3 work is auth LOGIC only: Apple Sign-In (Supabase provider + Apple Service ID), Google OAuth flow, Email OTP (resend code), Face ID via expo-local-authentication + Keychain via expo-secure-store. Estimated remaining: ~3h.
 
 **External prerequisites — confirma ANTES de arrancar cada story (regla pre-flight):**
 
@@ -97,16 +135,32 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 <!-- /progress logs variations, risks, and decisions here as you build -->
 <!-- Format: `[YYYY-MM-DD] [Milestone] [Decision/risk/learning]` -->
+
 [2026-05-03] [M1 S1] npm workspaces chosen (no Yarn/PNPM). NativeWind preset path changed in 4.2.x: use `nativewind/dist/tailwind` (not `/tailwind/native`). react@18.3.2 doesn't exist — pinned to 18.3.1. @types/react-native deprecated (RN ships its own types). `npx expo start` runs clean from apps/mobile.
+
 [2026-05-04] [M1 S2] Local supabase ports bumped +100 (api 54421, db 54422, studio 54423) to coexist with another project's stack on default ports. RLS recursion avoided via `auth_user_company_id()` / `auth_user_role()` SECURITY DEFINER helpers; named around the reserved `current_role` keyword. Schema status enums in the DB (`pauses.status` = pending/started/completed/skipped, `pauses.trigger_type` adds `surprise_monthly`, `subscription_status` adds `company`) drifted from the hand-written unions in `packages/shared-types/index.ts` — no consumers yet, deferred to whichever story first builds a screen that writes those columns. RLS tests live in `supabase/tests/rls.test.sql` and run with `psql -f`.
+
 [2026-05-04] [M1 S2] Remote project `breeze` (ref xkzpehqgbrngkfyxaeju, region us-east-2 Ohio) provisioned in liftkit3@gmail.com. Migrations 0001-0003 pushed clean. Project was created with "Automatically expose new tables" UNCHECKED — that meant DML grants weren't auto-applied to authenticated, so REST returned 401/42501 even with valid RLS. Migration 0003 grants explicit privileges per role (anon: none; authenticated: select/update on companies, select/insert/update on profiles, full DML on pauses). Mobile `.env.local` written at `apps/mobile/.env.local` with EXPO_PUBLIC_SUPABASE_URL + publishable key (new sb_publishable_* format, replaces legacy anon JWT).
+
+[2026-05-04 → 2026-05-09] [M1 S3] **Login redesign iterated 8 commits** trying to fix visual hierarchy and button rendering: Grok-aesthetic dark, prototype.html palette test, fake-door buttons, button bg solid #1F1F1F, +25% white border, +#3A3A3C contrast bump. **Pain identified:** drift across iterations had no enforcement — agent re-interpreted spacing/colors each session. Founder concluded this was structural (no design system + no tokens enforcement), not visual taste. Decision: pause S3 logic, build M0.5 (design system foundation) first.
+
+[2026-05-09 → 2026-05-10] [M0.5 D1-D6] **Design system foundation built end-to-end.** Brand brief: 7-question vibe interview answered → tokens.json generated deterministically (sage primary #6DBF8A + coral accent #FF8474 + warm cream bg #F9F7F2 + warm dark text #2D2A26 + Plus Jakarta Sans). Token spec captures full MECE (color/spacing/typography/radius/shadow/motion/z-index/sizing). 8 primitives built with class-variance-authority — TypeScript locks variant unions, ESLint blocks hex literals at write time. lib/cn.ts utility for class merging. Preview catalog at /(preview) renders every primitive in every variant for visual approval. **Decision: deferred Storybook web** — 4-6h friction with NativeWind v4 + RN-web vs 1h Expo route preview, latter chosen until 5+ screens exist.
+
+[2026-05-10] [M0.5 D7] **Welcome screen refactored to cosmic-pill** using external `breeze-design` Anthropic skill. Skill output (HTML reference + Tweaks panel + tokens) translated to RN production code: wordmark logo at 64px, 3-string rotating tagline (added "Pausa. Recarga. Vuelve."), 3 oauth-glass pill buttons (Google → Apple → email), footer disclaimer "Al continuar aceptas los Términos y la Política de privacidad." Added Text.tagline variant (16/500/0.02em letter-spacing). Added Button.oauth-glass variant (rgba white/10 bg + white/20 border, pill shape). All `oauth-*` Button variants now pill-shaped (rounded-full). ScreenFrame.dark-hero updated to minimal palette (single sage glow centered) with stronger vignette starting at 45%. **Zero hex literals, zero inline styles in welcome.tsx.** TS check + ESLint clean.
+
+[2026-05-10] [M0.5 D7] **Decisions deferred** in cosmic-pill refactor: (1) breezeFloat keyframe animation on hobby icons — looks fine static, saves 30min of Animated API setup. (2) `expo-blur` for true glass backdrop-filter — using rgba semi-transparent (no blur) which is ~80% of the look without new dependency. Both documented as upgrade paths in ScreenFrame.tsx comments.
+
+[2026-05-10] [M1 S3] **UI portion complete via M0.5 D7.** Welcome screen is locked. Auth LOGIC still pending: Apple Sign-In with Supabase provider, Google OAuth flow, Email OTP via Supabase auth.signInWithOtp, Face ID via expo-local-authentication + Keychain via expo-secure-store. Estimated remaining: ~3h of original 5h. Currently TODO comments in welcome.tsx route everything to /(main).
+
+[2026-05-10] [process] **Mistake captured:** all M0.5 work was committed directly on `main` instead of a feature branch. No actual damage (working tree dirty, recoverable). Rule for future: every new milestone or major story starts with `git checkout -b feat/<scope>`. To be added to repo CLAUDE.md in M0.5 D10.
 
 ---
 
 ## Estimation notes
 
-- 90h totales / ~5h día efectivo = **18 días hábiles**
-- Asumiendo trabajo continuo desde 2026-05-04 → ship 20 junio realista
+- 90h originales + ~9.5h M0.5 actuals + ~1.5h M0.5 pending = **~101h totales**
+- M0.5 was unplanned but unavoidable — paying it down once enables ~50% faster screens after Login (composition only, zero re-design)
+- Asumiendo trabajo continuo desde 2026-05-10 → ship 20 junio sigue realista
 - Buffer real para App Store review delays: **+1 semana** (puede llegar a 28 junio)
 - Si pace es 3h/día → ship se mueve a **5 julio**
 - Tracking real: actualizar `Actual` column al cerrar cada story para calibrar futuras estimaciones

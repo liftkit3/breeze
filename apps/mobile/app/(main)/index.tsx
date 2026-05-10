@@ -1,24 +1,29 @@
-import { Text, View } from "react-native";
-import { colors } from "@breeze/design-tokens";
+import { ScreenFrame } from "@/components/ScreenFrame";
+import { Stack } from "@/components/Stack";
+import { Text } from "@/components/Text";
+import { Button } from "@/components/Button";
 
+/**
+ * Main / Home — placeholder for logged-in state.
+ * Will be replaced with real Home screen in a later stage.
+ */
 export default function HomeScreen() {
   return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <Text className="text-4xl mb-2">🌬️</Text>
-      <Text className="text-3xl font-bold text-primary-600">Breeze</Text>
-      <Text className="text-base text-gray-500 mt-2">
-        Pausa. Recarga. Vuelve.
-      </Text>
+    <ScreenFrame>
+      <Stack flex justify="center" align="center" gap="md">
+        <Text variant="display">🌬️</Text>
+        <Text variant="h1" color="primary">Breeze</Text>
+        <Text variant="bodySm" color="muted">Pausa. Recarga. Vuelve.</Text>
 
-      {/* Token import check */}
-      <View
-        className="mt-8 px-6 py-3 rounded-xl"
-        style={{ backgroundColor: colors.primary[600] }}
-      >
-        <Text className="text-white font-semibold text-sm">
-          NativeWind + design-tokens ✓
-        </Text>
-      </View>
-    </View>
+        <Stack gap="sm" className="mt-xl">
+          <Text variant="caption" color="muted" align="center">
+            Tokens + primitives wired ✓
+          </Text>
+          <Button variant="primary" onPress={() => {}}>
+            Token check
+          </Button>
+        </Stack>
+      </Stack>
+    </ScreenFrame>
   );
 }

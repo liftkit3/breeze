@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Breeze — Pausas que recargan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-primary: #6DBF8A;
+      --color-primary-hover: #5BAA77;
+      --color-primary-light: #E8F4ED;
+      --color-primary-muted: #A8D5BA;
+      --color-accent: #FF8474;
+      --color-accent-hover: #FF6B59;
+      --color-accent-light: #FFEAE6;
+      --color-background: #F9F7F2;
+      --color-surface: #FFFFFF;
+      --color-surface-muted: #F4F1EB;
+      --color-text: #2D2A26;
+      --color-text-muted: #8A8378;
+      --color-border: #E8E3D9;
+    }
+    * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    html, body { background: #1F1B17; }
+    body { margin: 0; padding: 0; min-height: 100vh; }
+    .stage {
+      min-height: 100vh;
+      padding: 32px 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .device-frame {
+      width: 390px;
+      height: 844px;
+      background: var(--color-background);
+      border-radius: 48px;
+      border: 10px solid #2D2A26;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+      overflow: hidden;
+      position: relative;
+    }
+    .device-notch {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 28px;
+      background: #2D2A26;
+      border-radius: 14px;
+      z-index: 60;
+    }
+    .screen {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      color: var(--color-text);
+      background: var(--color-background);
+    }
+    .screen::-webkit-scrollbar { display: none; }
+    .web-frame {
+      width: 720px;
+      max-width: 100%;
+      background: var(--color-background);
+      border-radius: 16px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      align-self: stretch;
+    }
+    .web-topbar {
+      height: 36px;
+      background: #E8E3D9;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .web-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .toolbar {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 100;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      padding: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      font-size: 11px;
+      max-width: 240px;
+    }
+    .toolbar-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      padding: 4px 6px;
+    }
+    .toolbar button {
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 150ms ease;
+      border: none;
+      background: transparent;
+      color: var(--color-text);
+      cursor: pointer;
+    }
+    .toolbar button:hover { background: var(--color-surface-muted); }
+    .toolbar button.active {
+      background: var(--color-primary);
+      color: white;
+    }
+    button:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      transition: all 200ms ease;
+    }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-primary:disabled { background: var(--color-primary-muted); opacity: 0.5; cursor: not-allowed; }
+    .btn-accent {
+      background: var(--color-accent);
+      color: white;
+      box-shadow: 0 8px 20px rgba(255,132,116,0.30);
+      transition: all 200ms ease;
+    }
+    .btn-accent:hover { background: var(--color-accent-hover); transform: translateY(-1px); }
+    .card-elevated {
+      background: var(--color-surface);
+      border-radius: 24px;
+      box-shadow: 0 12px 24px rgba(45,42,38,0.06);
+      border: 1px solid var(--color-border);
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-surface-muted) 25%, #EDE8DD 50%, var(--color-surface-muted) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 12px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .sheet-enter { animation: slideUp 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 300ms ease-out; }
+    @keyframes pop {
+      0% { transform: scale(0.8); opacity: 0; }
+      60% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop { animation: pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .nav-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 88px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 12px 24px 28px;
+      z-index: 30;
+    }
+    .nav-icon {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+    .nav-icon-active { background: var(--color-primary-light); }
+    .nav-cta {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 24px rgba(255,132,116,0.35);
+      cursor: pointer;
+      transition: all 200ms ease;
+      font-size: 28px;
+      margin-top: -20px;
+    }
+    .nav-cta:hover { transform: translateY(-2px) scale(1.02); }
+    .hobby-card {
+      aspect-ratio: 1;
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 200ms ease;
+    }
+    .hobby-card.selected {
+      border-color: var(--color-primary);
+      background: var(--color-primary-light);
+      transform: scale(1.02);
+    }
+    .duration-pill {
+      padding: 14px 0;
+      border-radius: 16px;
+      background: var(--color-surface-muted);
+      cursor: pointer;
+      transition: all 200ms ease;
+      text-align: center;
+      border: 2px solid transparent;
+    }
+    .duration-pill.selected {
+      background: var(--color-primary-light);
+      border-color: var(--color-primary);
+    }
+    .ctx-pill {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: var(--color-surface-muted);
+      cursor: pointer;
+      transition: all 200ms ease;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .ctx-pill.selected {
+      background: var(--color-primary-light);
+      border-color: var(--color-primary);
+    }
+    .gradient-hero {
+      background: linear-gradient(135deg, #5BAA77 0%, #6DBF8A 50%, #FF8474 100%);
+    }
+    .login-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(168, 213, 186, 0.6) 0%, transparent 40%),
+        radial-gradient(circle at 80% 20%, rgba(255, 132, 116, 0.5) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(109, 191, 138, 0.5) 0%, transparent 50%),
+        linear-gradient(180deg, #2D2A26 0%, #3F3A33 100%);
+    }
+    .floating-emoji {
+      position: absolute;
+      font-size: 56px;
+      opacity: 0.25;
+      filter: blur(0.5px);
+    }
+    .ring-progress {
+      transform: rotate(-90deg);
+    }
+    .ring-progress circle.bg { stroke: var(--color-border); }
+    .ring-progress circle.fg {
+      stroke: var(--color-primary);
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    .focus-ring:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    .truncate-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted); }
+    .stage-title { color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect, useRef } = React;
+
+    // ──────────────────────────────────────────
+    // LOGO COMPONENT — 3 ascending bars (Liftkit-inspired)
+    // ──────────────────────────────────────────
+    const Logo = ({ size = 32, withWordmark = false, light = false }) => {
+      const wordColor = light ? "#FFFFFF" : "#2D2A26";
+      if (!withWordmark) {
+        return (
+          <svg width={size} height={size} viewBox="0 0 40 40">
+            <rect x="0" y="22" width="11" height="18" rx="3" fill="#A8D5BA"/>
+            <rect x="14" y="12" width="11" height="28" rx="3" fill="#6DBF8A"/>
+            <rect x="28" y="2" width="12" height="38" rx="3" fill="#FF8474"/>
+          </svg>
+        );
+      }
+      return (
+        <svg width={size * 6} height={size * 1.6} viewBox="0 0 240 64">
+          <rect x="4" y="35" width="18" height="29" rx="5" fill="#A8D5BA"/>
+          <rect x="26" y="19" width="18" height="45" rx="5" fill="#6DBF8A"/>
+          <rect x="48" y="3" width="19" height="61" rx="5" fill="#FF8474"/>
+          <text x="80" y="48" fontFamily="Plus Jakarta Sans, sans-serif" fontWeight="800" fontSize="38" fill={wordColor} letterSpacing="-1.5">Breeze</text>
+        </svg>
+      );
+    };
+
+    // ──────────────────────────────────────────
+    // MOCK DATA
+    // ──────────────────────────────────────────
+    const HOBBIES_AVAILABLE = [
+      { id: 'musica', emoji: '🎸', label: 'Música' },
+      { id: 'leer', emoji: '📚', label: 'Leer' },
+      { id: 'deporte', emoji: '🏃', label: 'Deporte' },
+      { id: 'videojuegos', emoji: '🎮', label: 'Videojuegos' },
+      { id: 'arte', emoji: '🎨', label: 'Arte' },
+      { id: 'mindful', emoji: '🧘', label: 'Mindfulness' },
+      { id: 'escribir', emoji: '✍️', label: 'Escribir' },
+      { id: 'otro', emoji: '➕', label: 'Otro' }
+    ];
+
+    const PHRASES = [
+      "Para recargar, primero hay que parar.",
+      "5 minutos tuyos > scroll infinito.",
+      "Tu cerebro no es una máquina.",
+      "El descanso también es productividad.",
+      "Tengo tiempo, hice algo que disfruto.",
+      "Las pausas son tuyas. Tómalas."
+    ];
+
+    const TAGLINES = [
+      "Pausas que recargan, no que distraen.",
+      "5 minutos para ti. El resto, después."
+    ];
+
+    const AI_OUTPUTS = [
+      { emoji: "🎸", title: "Toca el intro de Yesterday", motivation: "Tus dedos lo recuerdan. Solo empieza." },
+      { emoji: "📚", title: "Lee 5 páginas de tu libro pendiente", motivation: "Lleva semanas esperándote." },
+      { emoji: "🎸", title: "Aprende los 4 acordes de Wonderwall", motivation: "Ya los sabes. Solo necesitas recordarlos." },
+      { emoji: "📚", title: "Abre algo nuevo y lee el primer párrafo", motivation: "Una historia diferente empieza en 30 segundos." },
+      { emoji: "🎸", title: "Improvisa sin pensar 10 minutos", motivation: "Sin reglas, sin partitura. Dedos y cuerdas." }
+    ];
+
+    const FALLBACKS = {
+      musica: { emoji: "🎸", title: "Toca libremente lo que se te venga", motivation: "Sin presión. Sólo sonido." },
+      leer: { emoji: "📚", title: "Lee las primeras páginas de lo que tengas abierto", motivation: "Los libros se leen solos cuando los abres." },
+      deporte: { emoji: "🏃", title: "Sal a caminar a donde llegues en 5 minutos", motivation: "El aire fresco es el reset que necesitas." },
+      arte: { emoji: "🎨", title: "Dibuja lo primero que se te ocurra", motivation: "Sin borrar. Solo trazar." },
+      mindful: { emoji: "🧘", title: "Cierra los ojos y respira profundo 5 veces", motivation: "Tu cuerpo lleva rato esperando esto." },
+      videojuegos: { emoji: "🎮", title: "Una partida rápida, una sola", motivation: "Solo una. Lo prometemos." },
+      escribir: { emoji: "✍️", title: "Escribe 3 líneas sobre lo primero que pienses", motivation: "Sin estructura, sin propósito." }
+    };
+
+    const SAMPLE_PAUSES = [
+      { date: 'Hoy', time: '10:30am', emoji: '🎸', activity: 'Toca el intro de Yesterday', duration: 10, rating: 'up' },
+      { date: 'Ayer', time: '3:15pm', emoji: '📚', activity: 'Lee 5 páginas de tu libro', duration: 5, rating: 'up' },
+      { date: 'Ayer', time: '11:00am', emoji: '🎸', activity: 'Aprende un acorde nuevo', duration: 10, rating: 'down' }
+    ];
+
+    const HR_TEAM = [
+      { name: 'Ana García', pauses: 5, streak: 4, top: '🎸' },
+      { name: 'Luis Martínez', pauses: 3, streak: 2, top: '📚' },
+      { name: 'María Sánchez', pauses: 4, streak: 3, top: '🧘' },
+      { name: 'Carlos Ruiz', pauses: 2, streak: 1, top: '🏃' },
+      { name: 'Sara Ochoa', pauses: 0, streak: 0, top: '—' }
+    ];
+
+    // ──────────────────────────────────────────
+    // MAIN COMPONENT
+    // ──────────────────────────────────────────
+    function App() {
+      const [view, setView] = useState('login'); // login | onboarding | home | profile
+      const [viewState, setViewState] = useState('default'); // default | empty | loading | error
+      const [showHRDashboard, setShowHRDashboard] = useState(false);
+
+      // Onboarding state
+      const [onbStep, setOnbStep] = useState(1);
+      const [hobbies, setHobbies] = useState([]);
+      const [trigger, setTrigger] = useState(null);
+      const [calendarConnected, setCalendarConnected] = useState(false);
+
+      // Pause flow state
+      const [pauseFlow, setPauseFlow] = useState('idle'); // idle | sheet | loading | activity | post
+      const [context, setContext] = useState(null);
+      const [duration, setDuration] = useState(null);
+      const [activityIdx, setActivityIdx] = useState(0);
+      const [timeLeft, setTimeLeft] = useState(0);
+      const [rating, setRating] = useState(null);
+      const [note, setNote] = useState('');
+
+      // Tagline rotation (visual)
+      const [taglineIdx, setTaglineIdx] = useState(0);
+      useEffect(() => {
+        if (view !== 'login') return;
+        const t = setInterval(() => setTaglineIdx(i => (i + 1) % TAGLINES.length), 4000);
+        return () => clearInterval(t);
+      }, [view]);
+
+      // Timer countdown
+      useEffect(() => {
+        if (pauseFlow !== 'activity' || timeLeft <= 0) return;
+        const t = setInterval(() => setTimeLeft(s => Math.max(0, s - 1)), 1000);
+        if (timeLeft === 1) setTimeout(() => setPauseFlow('post'), 1000);
+        return () => clearInterval(t);
+      }, [pauseFlow, timeLeft]);
+
+      const todayPhrase = PHRASES[2];
+
+      // ─── Helpers ─────────────────────────────
+      const startPause = () => { setPauseFlow('sheet'); setContext(null); setDuration(null); };
+      const surpriseMe = () => {
+        setContext(['home','office','other'][Math.floor(Math.random()*3)]);
+        setDuration([5,10,15][Math.floor(Math.random()*3)]);
+        setTimeout(launchActivity, 200);
+      };
+      const launchActivity = () => {
+        setPauseFlow('loading');
+        setTimeout(() => {
+          setActivityIdx(i => (i + 1) % AI_OUTPUTS.length);
+          setTimeLeft((duration || 10) * 60);
+          // demo: shorten to 8 sec so user can see timer count
+          setTimeLeft(8);
+          setPauseFlow('activity');
+        }, 1400);
+      };
+      const finishPause = () => {
+        setRating(null); setNote(''); setPauseFlow('idle'); setView('home');
+      };
+
+      // ─── Common: Top status bar ──────────────
+      const StatusBar = () => (
+        <div className="absolute top-0 left-0 right-0 h-12 flex items-end justify-between px-7 pb-1 z-50 pointer-events-none">
+          <span className="text-[13px] font-semibold text-text">9:41</span>
+          <div className="flex items-center gap-1">
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><path d="M1 4.5h2v6H1zM5 3h2v7.5H5zM9 1.5h2v9H9zM13 0h2v10.5h-2z"/></svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><path d="M7 9.5L13.5 3a9 9 0 00-13 0L7 9.5zM7 9.5L7 9.5"/></svg>
+            <svg width="24" height="11" viewBox="0 0 24 11" fill="none"><rect x="1" y="1" width="20" height="9" rx="2" stroke="currentColor"/><rect x="3" y="3" width="14" height="5" rx="1" fill="currentColor"/><rect x="22" y="4" width="1.5" height="3" fill="currentColor"/></svg>
+          </div>
+        </div>
+      );
+
+      // ──────────────────────────────────────────
+      // SCREEN: LOGIN
+      // ──────────────────────────────────────────
+      const LoginScreen = () => (
+        <div className="screen relative">
+          <div className="login-bg" />
+          <span className="floating-emoji" style={{top:'8%', left:'12%'}}>🎸</span>
+          <span className="floating-emoji" style={{top:'18%', right:'8%'}}>📚</span>
+          <span className="floating-emoji" style={{top:'34%', left:'20%'}}>🏃</span>
+          <span className="floating-emoji" style={{top:'30%', right:'18%'}}>🎨</span>
+          <span className="floating-emoji" style={{top:'48%', left:'8%'}}>🧘</span>
+          <span className="floating-emoji" style={{top:'52%', right:'14%'}}>✍️</span>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#2D2A26]/95" />
+
+          <StatusBar />
+
+          <div className="relative z-10 flex flex-col h-full px-8 pt-32 pb-10 text-white">
+            <div className="flex-1 flex flex-col items-center justify-center text-center">
+              <Logo size={28} withWordmark light />
+              <p className="mt-12 text-2xl font-medium leading-snug max-w-[280px]" style={{transition: 'opacity 400ms'}} key={taglineIdx}>
+                <span className="fade-in inline-block">"{TAGLINES[taglineIdx]}"</span>
+              </p>
+              <p className="mt-6 text-sm text-white/60 max-w-[260px]">
+                La app de pausas activas personalizadas según lo que te gusta.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button onClick={() => { setView('onboarding'); setOnbStep(1); }} className="w-full bg-white text-text py-4 rounded-2xl font-semibold flex items-center justify-center gap-3 shadow-lg">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                Continúa con Apple
+              </button>
+              <button onClick={() => { setView('onboarding'); setOnbStep(1); }} className="w-full bg-white text-text py-4 rounded-2xl font-semibold flex items-center justify-center gap-3 shadow-lg">
+                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Continúa con Google
+              </button>
+              <button onClick={() => { setView('onboarding'); setOnbStep(1); }} className="w-full border border-white/30 text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-3">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7l9 6 9-6M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7"/></svg>
+                Continúa con email
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+
+      // ──────────────────────────────────────────
+      // SCREEN: ONBOARDING (3 steps)
+      // ──────────────────────────────────────────
+      const OnboardingScreen = () => {
+        const toggleHobby = (id) => {
+          if (hobbies.includes(id)) setHobbies(hobbies.filter(h => h !== id));
+          else if (hobbies.length < 3) setHobbies([...hobbies, id]);
+        };
+        const canProceed = onbStep === 1 ? hobbies.length > 0
+                         : onbStep === 2 ? (trigger === 'pomodoro' || (trigger === 'calendar' && calendarConnected))
+                         : true;
+        const next = () => {
+          if (onbStep < 3) setOnbStep(onbStep + 1);
+          else setView('home');
+        };
+
+        return (
+          <div className="screen relative">
+            <StatusBar />
+            <div className="px-8 pt-16 pb-8 flex flex-col h-full">
+              {/* Progress dots */}
+              <div className="flex items-center justify-between mb-8">
+                <button onClick={() => onbStep > 1 ? setOnbStep(onbStep - 1) : setView('login')} className="text-text-muted text-sm font-medium">
+                  ← Atrás
+                </button>
+                <div className="flex gap-1.5">
+                  {[1,2,3].map(s => (
+                    <div key={s} className="h-1.5 rounded-full transition-all"
+                      style={{ width: s === onbStep ? 28 : 8, background: s <= onbStep ? 'var(--color-primary)' : 'var(--color-border)' }} />
+                  ))}
+                </div>
+                <span className="text-xs font-semibold text-text-muted">{onbStep}/3</span>
+              </div>
+
+              {/* Step 1: Hobbies */}
+              {onbStep === 1 && (
+                <div className="flex-1 fade-in">
+                  <h1 className="text-[28px] font-bold leading-tight mb-2">¿Qué te gusta hacer<br/>cuando no trabajas?</h1>
+                  <p className="text-text-muted text-sm mb-6">Elige hasta 3 — pueden cambiar cuando quieras.</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {HOBBIES_AVAILABLE.map(h => (
+                      <div key={h.id} onClick={() => toggleHobby(h.id)}
+                        className={'hobby-card ' + (hobbies.includes(h.id) ? 'selected' : '')}
+                        style={{ opacity: !hobbies.includes(h.id) && hobbies.length >= 3 ? 0.4 : 1 }}>
+                        <div className="text-3xl">{h.emoji}</div>
+                        <div className="text-xs font-semibold">{h.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Trigger */}
+              {onbStep === 2 && (
+                <div className="flex-1 fade-in">
+                  <h1 className="text-[28px] font-bold leading-tight mb-2">¿Cómo quieres que<br/>te avisemos?</h1>
+                  <p className="text-text-muted text-sm mb-6">Las pausas llegan en el mejor momento.</p>
+                  <div className="space-y-3">
+                    <div onClick={() => setTrigger('pomodoro')}
+                      className={'p-5 rounded-2xl border-2 cursor-pointer transition-all ' + (trigger === 'pomodoro' ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)]' : 'border-[var(--color-border)] bg-surface')}>
+                      <div className="flex items-start gap-4">
+                        <div className="text-3xl">⏱️</div>
+                        <div>
+                          <div className="font-bold text-base">Cada 90 minutos</div>
+                          <div className="text-text-muted text-sm">Pomodoro · trabajo en bloques</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div onClick={() => setTrigger('calendar')}
+                      className={'p-5 rounded-2xl border-2 cursor-pointer transition-all ' + (trigger === 'calendar' ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)]' : 'border-[var(--color-border)] bg-surface')}>
+                      <div className="flex items-start gap-4">
+                        <div className="text-3xl">📅</div>
+                        <div>
+                          <div className="font-bold text-base">Entre reuniones</div>
+                          <div className="text-text-muted text-sm">Google Calendar · ventanas libres</div>
+                        </div>
+                      </div>
+                    </div>
+                    {trigger === 'calendar' && (
+                      <button onClick={() => setCalendarConnected(true)}
+                        className="w-full py-4 rounded-2xl font-semibold border-2 border-dashed transition-all"
+                        style={{ borderColor: calendarConnected ? 'var(--color-primary)' : 'var(--color-border)', background: calendarConnected ? 'var(--color-primary-light)' : 'transparent', color: calendarConnected ? 'var(--color-primary)' : 'var(--color-text)' }}>
+                        {calendarConnected ? '✓ Google Calendar conectado' : 'Conectar Google Calendar →'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Notifications */}
+              {onbStep === 3 && (
+                <div className="flex-1 fade-in flex flex-col items-center justify-center text-center px-4">
+                  <div className="w-24 h-24 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mb-6 pop">
+                    <span className="text-5xl">🔔</span>
+                  </div>
+                  <h1 className="text-[28px] font-bold leading-tight mb-3">Las pausas llegan<br/>como sorpresas.</h1>
+                  <p className="text-text-muted text-base leading-relaxed max-w-[260px]">
+                    Activa las notificaciones para descubrir qué te toca cada vez.
+                  </p>
+                </div>
+              )}
+
+              {/* CTA */}
+              <div className="space-y-3">
+                <button onClick={next} disabled={!canProceed}
+                  className="w-full btn-primary py-4 rounded-2xl font-semibold text-base">
+                  {onbStep === 3 ? 'Activar notificaciones' : 'Continuar →'}
+                </button>
+                {onbStep === 3 && (
+                  <button onClick={() => setView('home')} className="w-full text-text-muted text-sm py-2">
+                    Ahora no
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // ──────────────────────────────────────────
+      // SCREEN: HOME
+      // ──────────────────────────────────────────
+      const HomeScreen = () => {
+        if (viewState === 'loading') {
+          return (
+            <div className="screen">
+              <StatusBar />
+              <div className="px-7 pt-16 space-y-5">
+                <div className="flex justify-between items-center">
+                  <div className="skeleton h-6 w-40" />
+                  <div className="skeleton h-7 w-12 rounded-full" />
+                </div>
+                <div className="skeleton h-24 w-full mt-8" />
+                <div className="skeleton h-20 w-full" />
+                <div className="skeleton h-20 w-full" />
+              </div>
+              <NavBar />
+            </div>
+          );
+        }
+        if (viewState === 'error') {
+          return (
+            <div className="screen flex items-center justify-center px-8">
+              <div className="text-center">
+                <div className="text-5xl mb-4">🌫️</div>
+                <h2 className="font-bold text-xl mb-2">Algo se nubló</h2>
+                <p className="text-text-muted text-sm mb-6">No pudimos cargar tus datos. Toca para intentar de nuevo.</p>
+                <button onClick={() => setViewState('default')} className="btn-primary px-6 py-3 rounded-2xl font-semibold">Reintentar</button>
+              </div>
+              <NavBar />
+            </div>
+          );
+        }
+
+        const isEmpty = viewState === 'empty';
+        return (
+          <div className="screen relative">
+            <StatusBar />
+            <div className="px-7 pt-14 pb-32">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-1">
+                <div>
+                  <p className="text-text-muted text-sm">Hola,</p>
+                  <h1 className="text-2xl font-bold">Nicolás 👋</h1>
+                </div>
+                <div className="flex items-center gap-1.5 bg-[var(--color-accent-light)] px-3 py-1.5 rounded-full">
+                  <span className="text-base">🔥</span>
+                  <span className="font-bold text-[var(--color-accent)] text-sm">{isEmpty ? 0 : 4}</span>
+                </div>
+              </div>
+
+              {/* Motivational phrase */}
+              <div className="mt-10 mb-8">
+                <p className="text-2xl font-bold leading-snug text-text">
+                  "{todayPhrase}"
+                </p>
+                <div className="h-px bg-border mt-6" />
+              </div>
+
+              {/* Last pause */}
+              {isEmpty ? (
+                <div className="card-elevated p-6 text-center">
+                  <div className="text-4xl mb-3">✨</div>
+                  <p className="font-bold text-base mb-1">Tu primera pausa está lista</p>
+                  <p className="text-text-muted text-sm">Toca el botón ⏸ cuando estés listo.</p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  <div>
+                    <p className="label mb-2">Última pausa</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-[var(--color-primary-light)] flex items-center justify-center text-2xl">🎸</div>
+                      <div>
+                        <p className="font-semibold text-[15px] truncate-2 max-w-[240px]">Toca el intro de Yesterday</p>
+                        <p className="text-text-muted text-sm">Hoy 10:30am · 10 min</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-border" />
+
+                  <div>
+                    <p className="label mb-2">Próxima sugerida</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent-light)] flex items-center justify-center">
+                        <span className="text-[var(--color-accent)] text-xl">⏱</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[15px]">En ~47 minutos</p>
+                        <p className="text-text-muted text-sm">Después de tu reunión 1:1</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <NavBar />
+          </div>
+        );
+      };
+
+      // ──────────────────────────────────────────
+      // SCREEN: PROFILE
+      // ──────────────────────────────────────────
+      const ProfileScreen = () => (
+        <div className="screen relative">
+          <StatusBar />
+          <div className="px-7 pt-14 pb-32">
+            {/* User card */}
+            <div className="flex items-center gap-4 mb-7">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center text-white font-bold text-lg">N</div>
+              <div className="flex-1 min-w-0">
+                <h1 className="font-bold text-lg leading-tight">Nicolás Rodríguez</h1>
+                <p className="text-text-muted text-sm truncate">nrod@addi.com</p>
+              </div>
+              <button className="text-text-muted text-sm font-medium px-3 py-1.5 rounded-full bg-surface-muted">
+                Salir
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="card-elevated p-5 mb-5">
+              <div className="flex items-baseline justify-between mb-5">
+                <div>
+                  <p className="label">Racha actual</p>
+                  <p className="text-3xl font-extrabold mt-1">🔥 4 días</p>
+                </div>
+                <div className="text-right">
+                  <p className="label">Total pausas</p>
+                  <p className="text-3xl font-extrabold mt-1">23</p>
+                </div>
+              </div>
+              <div>
+                <p className="label mb-3">Esta semana</p>
+                <div className="flex justify-between">
+                  {[
+                    {d:'L', f:true}, {d:'M', f:true}, {d:'M', f:true}, {d:'J', f:false},
+                    {d:'V', f:true}, {d:'S', f:false}, {d:'D', f:false}
+                  ].map((day, i) => (
+                    <div key={i} className="flex flex-col items-center gap-2">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center"
+                        style={{ background: day.f ? 'var(--color-primary)' : 'var(--color-surface-muted)' }}>
+                        {day.f && <span className="text-white text-xs">●</span>}
+                      </div>
+                      <span className="text-xs text-text-muted font-medium">{day.d}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Hobbies breakdown */}
+            <div className="card-elevated p-5 mb-5">
+              <p className="label mb-4">Por hobby</p>
+              <div className="space-y-3">
+                {[
+                  { emoji: '🎸', label: 'Guitarra', count: 12, max: 12 },
+                  { emoji: '📚', label: 'Lectura', count: 6, max: 12 },
+                  { emoji: '🏃', label: 'Deporte', count: 3, max: 12 }
+                ].map((h, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="text-xl w-7">{h.emoji}</span>
+                    <span className="flex-1 text-sm font-semibold">{h.label}</span>
+                    <div className="w-32 h-2 bg-surface-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-[var(--color-primary)] rounded-full" style={{ width: `${(h.count/h.max)*100}%` }} />
+                    </div>
+                    <span className="text-sm font-bold w-7 text-right">{h.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Settings */}
+            <div className="card-elevated overflow-hidden">
+              <p className="label px-5 pt-5 pb-3">Preferencias</p>
+              {[
+                { icon: '🎨', label: 'Mis hobbies', val: '🎸 📚' },
+                { icon: '⏱', label: 'Trigger', val: 'Calendar' },
+                { icon: '🔔', label: 'Notificaciones', val: 'Activadas' },
+                { icon: '🏢', label: 'Empresa', val: 'Addi' }
+              ].map((row, i, arr) => (
+                <div key={i} className={'flex items-center gap-3 px-5 py-3.5 cursor-pointer hover:bg-surface-muted ' + (i < arr.length - 1 ? 'border-b border-border' : '')}>
+                  <span className="text-xl">{row.icon}</span>
+                  <span className="flex-1 text-[15px] font-medium">{row.label}</span>
+                  <span className="text-text-muted text-sm">{row.val}</span>
+                  <span className="text-text-muted">›</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <NavBar />
+        </div>
+      );
+
+      // ──────────────────────────────────────────
+      // BOTTOM SHEET: Context + Duration
+      // ──────────────────────────────────────────
+      const BottomSheet = () => (
+        <div className="absolute inset-0 z-40 flex items-end" onClick={() => setPauseFlow('idle')}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative w-full bg-surface rounded-t-[32px] sheet-enter px-7 pt-3 pb-10 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-5" />
+            <h2 className="text-[22px] font-bold mb-1">Pausa rápida</h2>
+            <p className="text-text-muted text-sm mb-6">Cuéntanos lo mínimo y la armamos.</p>
+
+            <p className="label mb-3">¿Dónde estás?</p>
+            <div className="grid grid-cols-3 gap-2 mb-6">
+              {[
+                { id: 'home', emoji: '🏠', label: 'Casa' },
+                { id: 'office', emoji: '🏢', label: 'Oficina' },
+                { id: 'other', emoji: '🌍', label: 'Otro' }
+              ].map(c => (
+                <div key={c.id} onClick={() => setContext(c.id)} className={'ctx-pill ' + (context === c.id ? 'selected' : '')}>
+                  <span className="text-2xl">{c.emoji}</span>
+                  <span className="text-xs font-semibold">{c.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className="label mb-3">¿Cuánto tiempo?</p>
+            <div className="grid grid-cols-3 gap-2 mb-6">
+              {[5, 10, 15].map(d => (
+                <div key={d} onClick={() => setDuration(d)} className={'duration-pill ' + (duration === d ? 'selected' : '')}>
+                  <div className="font-bold text-xl">{d}</div>
+                  <div className="text-xs text-text-muted">min</div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => (context && duration ? launchActivity() : null)}
+              disabled={!context || !duration}
+              className="w-full btn-accent py-4 rounded-2xl font-bold text-base mb-2 disabled:opacity-40 disabled:shadow-none disabled:bg-[var(--color-accent)]">
+              Sorpréndeme →
+            </button>
+            <button onClick={surpriseMe} className="w-full text-text-muted text-sm py-2 font-medium">
+              Decide tú por mí
+            </button>
+          </div>
+        </div>
+      );
+
+      // ──────────────────────────────────────────
+      // ACTIVITY SCREEN (loading + active + post)
+      // ──────────────────────────────────────────
+      const ActivityScreen = () => {
+        const out = AI_OUTPUTS[activityIdx];
+        const total = (duration || 10) * 60;
+        const progress = total > 0 ? (1 - timeLeft / Math.max(total, 8)) : 0;
+        const circumference = 2 * Math.PI * 60;
+        const dashOffset = circumference * (1 - progress);
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+
+        if (pauseFlow === 'loading') {
+          return (
+            <div className="screen flex flex-col items-center justify-center bg-background px-8 fade-in">
+              <div className="text-center">
+                <div className="w-20 h-20 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mb-6 mx-auto pop">
+                  <span className="text-4xl">✨</span>
+                </div>
+                <p className="text-text-muted text-sm mb-1">Pensando algo bueno</p>
+                <p className="font-bold text-lg">para ti…</p>
+                <div className="flex justify-center gap-1.5 mt-6">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-bounce" />
+                  <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.15s' }} />
+                  <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.3s' }} />
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        if (pauseFlow === 'post') {
+          return (
+            <div className="screen flex flex-col bg-background px-8 pt-20 pb-10 fade-in">
+              <div className="flex-1 flex flex-col items-center text-center">
+                <div className="text-5xl mb-4 pop">✨</div>
+                <h1 className="text-[28px] font-bold mb-2">¡Pausa completada!</h1>
+                <p className="text-text-muted text-base mb-8">Sumas una más a tu racha.</p>
+
+                <p className="font-semibold text-[15px] mb-4">¿Cómo estuvo?</p>
+                <div className="flex gap-4 mb-7">
+                  <button onClick={() => setRating('up')}
+                    className="w-16 h-16 rounded-full text-3xl flex items-center justify-center transition-all"
+                    style={{ background: rating === 'up' ? 'var(--color-primary)' : 'var(--color-surface)', boxShadow: rating === 'up' ? '0 8px 20px rgba(109,191,138,0.35)' : '0 2px 6px rgba(0,0,0,0.06)', transform: rating === 'up' ? 'scale(1.1)' : 'scale(1)' }}>
+                    👍
+                  </button>
+                  <button onClick={() => setRating('down')}
+                    className="w-16 h-16 rounded-full text-3xl flex items-center justify-center transition-all"
+                    style={{ background: rating === 'down' ? 'var(--color-error)' : 'var(--color-surface)', boxShadow: rating === 'down' ? '0 8px 20px rgba(224,120,86,0.35)' : '0 2px 6px rgba(0,0,0,0.06)', transform: rating === 'down' ? 'scale(1.1)' : 'scale(1)' }}>
+                    👎
+                  </button>
+                </div>
+
+                <textarea
+                  value={note} onChange={e => setNote(e.target.value.slice(0,140))}
+                  placeholder="¿Qué hiciste o aprendiste? (opcional)"
+                  className="w-full bg-surface border border-border rounded-2xl p-4 text-sm focus-ring resize-none"
+                  rows={3}
+                />
+                <p className="text-xs text-text-muted self-end mt-1">{note.length}/140</p>
+              </div>
+
+              <button onClick={finishPause} className="w-full btn-primary py-4 rounded-2xl font-bold text-base">
+                Listo →
+              </button>
+            </div>
+          );
+        }
+
+        // Active timer
+        return (
+          <div className="screen relative bg-background fade-in">
+            <button onClick={() => setPauseFlow('idle')}
+              className="absolute top-14 right-6 w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:bg-surface-muted z-10"
+              style={{ fontSize: 18, opacity: 0.5 }}>
+              ✕
+            </button>
+
+            <div className="flex flex-col h-full pt-24 pb-12 px-7 items-center">
+              {/* Activity card */}
+              <div className="card-elevated w-full p-7 text-center">
+                <div className="text-6xl mb-4 pop">{out.emoji}</div>
+                <h1 className="text-[26px] font-bold leading-snug mb-4 px-2">{out.title}</h1>
+                <p className="text-text-muted text-[15px] leading-relaxed italic px-2">"{out.motivation}"</p>
+              </div>
+
+              {/* Timer ring */}
+              <div className="flex-1 flex flex-col items-center justify-center">
+                <div className="relative">
+                  <svg className="ring-progress" width="160" height="160">
+                    <circle cx="80" cy="80" r="60" fill="none" strokeWidth="6" className="bg" />
+                    <circle cx="80" cy="80" r="60" fill="none" strokeWidth="6" className="fg"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={dashOffset} />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-[32px] font-bold tabular-nums">
+                        {String(minutes).padStart(2,'0')}:{String(seconds).padStart(2,'0')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-text-muted text-xs mt-6 max-w-[240px] text-center">
+                  Cuando llegue a cero te avisamos. No mires el celular.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // ──────────────────────────────────────────
+      // NAV BAR
+      // ──────────────────────────────────────────
+      const NavBar = () => (
+        <div className="nav-bar">
+          <div onClick={() => setView('home')} className={'nav-icon ' + (view === 'home' ? 'nav-icon-active' : '')}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={view === 'home' ? 'var(--color-primary)' : 'var(--color-text-muted)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12L12 4l9 8M5 11v9h14v-9"/>
+            </svg>
+          </div>
+
+          <div onClick={startPause} className="nav-cta">
+            <span style={{ fontSize: 26, lineHeight: 1 }}>⏸</span>
+          </div>
+
+          <div onClick={() => setView('profile')} className={'nav-icon ' + (view === 'profile' ? 'nav-icon-active' : '')}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={view === 'profile' ? 'var(--color-primary)' : 'var(--color-text-muted)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 21v-2a6 6 0 016-6h4a6 6 0 016 6v2"/>
+            </svg>
+          </div>
+        </div>
+      );
+
+      // ──────────────────────────────────────────
+      // HR DASHBOARD (web)
+      // ──────────────────────────────────────────
+      const HRDashboard = () => {
+        const [hrTab, setHrTab] = useState('adoption');
+        return (
+          <div className="web-frame">
+            <div className="web-topbar">
+              <div className="web-dot" style={{ background: '#FF6B59' }} />
+              <div className="web-dot" style={{ background: '#F4B860' }} />
+              <div className="web-dot" style={{ background: '#6DBF8A' }} />
+              <div className="ml-3 text-xs text-text-muted font-medium">app.breeze.com/hr</div>
+            </div>
+
+            <div className="bg-background min-h-[700px]">
+              {/* Header */}
+              <div className="px-8 pt-6 pb-5 border-b border-border bg-surface">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <Logo size={20} withWordmark />
+                    <span className="text-text-muted text-sm font-medium">/ HR</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center text-white text-xs font-bold">M</div>
+                      <span className="font-medium">María, HR Lead</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-3">
+                  <h1 className="text-2xl font-extrabold">Addi · Equipo Tech</h1>
+                  <span className="text-text-muted text-sm">87 empleados activos</span>
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div className="px-8 pt-4 flex gap-1 border-b border-border bg-surface">
+                {[
+                  { id: 'adoption', label: 'Adopción' },
+                  { id: 'report', label: 'Reporte mensual' }
+                ].map(t => (
+                  <button key={t.id} onClick={() => setHrTab(t.id)}
+                    className={'px-5 py-3 text-sm font-semibold transition-all relative ' + (hrTab === t.id ? 'text-text' : 'text-text-muted')}>
+                    {t.label}
+                    {hrTab === t.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-primary)]" />}
+                  </button>
+                ))}
+              </div>
+
+              {/* Adoption tab */}
+              {hrTab === 'adoption' && (
+                <div className="p-8 fade-in">
+                  <div className="grid grid-cols-3 gap-5 mb-7">
+                    <div className="card-elevated p-5">
+                      <p className="label mb-2">Adopción semanal</p>
+                      <p className="text-4xl font-extrabold mb-1">68%</p>
+                      <p className="text-sm text-text-muted">59 / 87 personas</p>
+                      <div className="w-full h-2 bg-surface-muted rounded-full mt-3 overflow-hidden">
+                        <div className="h-full bg-[var(--color-primary)] rounded-full" style={{ width: '68%' }} />
+                      </div>
+                    </div>
+                    <div className="card-elevated p-5">
+                      <p className="label mb-2">Pausas totales</p>
+                      <p className="text-4xl font-extrabold mb-1">412</p>
+                      <p className="text-sm text-[var(--color-primary)] font-semibold">↑ 24% vs sem. pasada</p>
+                    </div>
+                    <div className="card-elevated p-5">
+                      <p className="label mb-2">Días más activos</p>
+                      <p className="text-4xl font-extrabold mb-1">Mar/Jue</p>
+                      <p className="text-sm text-text-muted">Patrón últimas 4 sem.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="card-elevated p-6">
+                      <p className="label mb-4">Top actividades</p>
+                      {[
+                        { rank: 1, emoji: '📚', label: 'Lectura', pct: 34 },
+                        { rank: 2, emoji: '🎸', label: 'Música', pct: 28 },
+                        { rank: 3, emoji: '🏃', label: 'Deporte', pct: 19 },
+                        { rank: 4, emoji: '🧘', label: 'Mindfulness', pct: 12 },
+                        { rank: 5, emoji: '🎨', label: 'Arte', pct: 7 }
+                      ].map(a => (
+                        <div key={a.rank} className="flex items-center gap-3 py-2">
+                          <span className="text-text-muted font-bold w-5">{a.rank}.</span>
+                          <span className="text-2xl">{a.emoji}</span>
+                          <span className="flex-1 font-semibold text-sm">{a.label}</span>
+                          <div className="w-24 h-2 bg-surface-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-[var(--color-primary)] rounded-full" style={{ width: `${a.pct}%` }} />
+                          </div>
+                          <span className="text-sm font-bold w-10 text-right">{a.pct}%</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="card-elevated p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="label">Por empleado</p>
+                        <span className="text-xs text-text-muted">Esta semana</span>
+                      </div>
+                      <div className="divide-y divide-border">
+                        {HR_TEAM.map((emp, i) => (
+                          <div key={i} className="flex items-center gap-3 py-3">
+                            <div className="w-8 h-8 rounded-full bg-surface-muted flex items-center justify-center text-sm font-bold">{emp.name.charAt(0)}</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm">{emp.name}</p>
+                              <p className="text-xs text-text-muted">Top: {emp.top}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-sm">{emp.pauses} <span className="text-text-muted font-medium text-xs">pausas</span></p>
+                              <p className="text-xs">{emp.streak > 0 ? `🔥 ${emp.streak}` : '—'}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Report tab */}
+              {hrTab === 'report' && (
+                <div className="p-8 fade-in">
+                  <div className="card-elevated p-7 mb-5">
+                    <div className="flex items-start justify-between mb-5">
+                      <div>
+                        <p className="label mb-1">Reporte de Mayo 2026</p>
+                        <h2 className="text-2xl font-extrabold">Resumen mensual</h2>
+                        <p className="text-text-muted text-sm mt-1">Generado automáticamente · Mayo 31, 2026</p>
+                      </div>
+                      <button className="btn-primary px-5 py-2.5 rounded-xl font-semibold text-sm">
+                        Descargar PDF ↓
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-4 mb-5">
+                      {[
+                        { label: 'Adopción', val: '72%', delta: '+8pp' },
+                        { label: 'Pausas tot.', val: '1,847', delta: '+24%' },
+                        { label: 'Min. recuperados', val: '14k', delta: '+31%' },
+                        { label: 'eNPS bienestar', val: '+42', delta: '+6' }
+                      ].map((m, i) => (
+                        <div key={i} className="bg-surface-muted rounded-xl p-4">
+                          <p className="text-xs text-text-muted font-medium mb-1">{m.label}</p>
+                          <p className="text-xl font-extrabold">{m.val}</p>
+                          <p className="text-xs text-[var(--color-primary)] font-semibold mt-1">{m.delta}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="bg-[var(--color-primary-light)] rounded-2xl p-5">
+                      <p className="font-semibold text-sm mb-2">📌 Highlights del mes</p>
+                      <ul className="space-y-1.5 text-sm text-text">
+                        <li>• Adopción creció 8 puntos: superamos meta trimestral</li>
+                        <li>• Tech (94 personas) lidera con 81% de adopción semanal</li>
+                        <li>• Lectura subió al #1 desplazando a Música por primera vez</li>
+                        <li>• Martes y jueves siguen siendo los días con más pausas</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+      // ──────────────────────────────────────────
+      // RENDER MAIN
+      // ──────────────────────────────────────────
+      const renderScreen = () => {
+        if (view === 'login') return <LoginScreen />;
+        if (view === 'onboarding') return <OnboardingScreen />;
+
+        // Pause overlays (sit on top of home/profile)
+        const baseScreen = view === 'profile' ? <ProfileScreen /> : <HomeScreen />;
+        return (
+          <>
+            {(pauseFlow === 'loading' || pauseFlow === 'activity' || pauseFlow === 'post') ? <ActivityScreen /> : baseScreen}
+            {pauseFlow === 'sheet' && <BottomSheet />}
+          </>
+        );
+      };
+
+      return (
+        <>
+          {/* Toolbar */}
+          <div className="toolbar">
+            <div className="toolbar-title">Pantalla</div>
+            <div className="flex flex-wrap gap-1 mb-1.5">
+              {[
+                { id: 'login', label: 'Login' },
+                { id: 'onboarding', label: 'Onboard' },
+                { id: 'home', label: 'Home' },
+                { id: 'profile', label: 'Perfil' }
+              ].map(s => (
+                <button key={s.id} onClick={() => { setView(s.id); setPauseFlow('idle'); setOnbStep(1); }}
+                  className={view === s.id ? 'active' : ''}>{s.label}</button>
+              ))}
+            </div>
+
+            <div className="toolbar-title">Estado</div>
+            <div className="flex flex-wrap gap-1 mb-1.5">
+              {['default', 'empty', 'loading', 'error'].map(s => (
+                <button key={s} onClick={() => setViewState(s)} className={viewState === s ? 'active' : ''}>{s}</button>
+              ))}
+            </div>
+
+            <div className="toolbar-title">Flujo Pausa</div>
+            <div className="flex flex-wrap gap-1 mb-1.5">
+              {[
+                { id: 'sheet', label: 'Sheet' },
+                { id: 'loading', label: 'IA…' },
+                { id: 'activity', label: 'Timer' },
+                { id: 'post', label: 'Post' },
+                { id: 'idle', label: 'Cerrar' }
+              ].map(p => (
+                <button key={p.id} onClick={() => {
+                  if (p.id === 'activity') { setActivityIdx(i => (i+1) % AI_OUTPUTS.length); setTimeLeft(8); }
+                  setPauseFlow(p.id);
+                }}>{p.label}</button>
+              ))}
+            </div>
+
+            <div className="toolbar-title">Vista</div>
+            <div className="flex flex-wrap gap-1">
+              <button onClick={() => setShowHRDashboard(!showHRDashboard)}
+                className={showHRDashboard ? 'active' : ''}>{showHRDashboard ? '✓ Web HR' : '+ Web HR'}</button>
+            </div>
+          </div>
+
+          <div className="stage">
+            <div className="flex flex-col items-center">
+              <div className="device-frame">
+                <div className="device-notch" />
+                {renderScreen()}
+              </div>
+              <div className="stage-title">📱 Mobile · Empleado</div>
+            </div>
+
+            {showHRDashboard && (
+              <div className="flex flex-col items-center w-full max-w-[720px]">
+                <HRDashboard />
+                <div className="stage-title">💻 Web · HR Dashboard</div>
+              </div>
+            )}
+          </div>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

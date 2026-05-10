@@ -13,7 +13,10 @@ import {
 import { AuthProvider } from "@/features/auth/auth-context";
 import "../global.css";
 
-SplashScreen.preventAutoHideAsync();
+// `.catch` swallows the "no native splash screen registered" rejection that
+// fires when expo-router re-mounts the root layout (e.g. after the OAuth deep
+// link returns) and the splash has already been hidden. Harmless either way.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -26,7 +29,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded]);
 

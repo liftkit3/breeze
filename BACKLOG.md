@@ -65,7 +65,10 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 **M1 ship criteria:** development build instalable en TestFlight interno, flujo completo funciona end-to-end con 1 empleado de prueba.
 
-**S3 closed (2026-05-10):** Email OTP + Google OAuth shipped end-to-end on branch `feat/m1-s3-email-flow` (10 commits, merged via PR). Apple Sign-In + Face ID + Keychain re-login **moved to M1.5 story 18** because both require an active Apple Developer subscription that hasn't been purchased yet — pairing them with App Store Connect setup is cheaper than burning Apple Dev cycles in isolation.
+**S3 closed (2026-05-10):** Email OTP + Google OAuth shipped end-to-end on branch `feat/m1-s3-email-flow` (10 commits, merged via PR #4). Three follow-ups deferred to M1.5 because they all depend on the `breeze.app` domain (S13):
+- **S18** — Apple Sign-In + Face ID + Keychain re-login (needs Apple Developer $99/año subscription).
+- **S19** — Resend production sender: currently in sandbox mode, only delivers to `liftkit3@gmail.com`. Verifying `breeze.app` in Resend + swapping the Supabase SMTP sender unlocks OTP to any recipient.
+- **S20** — Google OAuth consent screen: currently shows "Sign in to continue to xkzpehqgbrngkfyxaeju.supabase.co" instead of "Breeze". App name + support email are set, but full branding requires App domain + privacy/terms URLs from S14.
 
 **External prerequisites — confirma ANTES de arrancar cada story (regla pre-flight):**
 
@@ -91,8 +94,10 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 | 16 | App Store Connect + Google Play setup | Apps creadas en ambos stores, 5+ screenshots por device size, ASO copy (title + subtitle + keywords), ATT prompt config, privacy nutrition labels | 3h | — | ○ |
 | 17 | TestFlight + Play Internal submission | Build production sube a TestFlight + Internal Testing track, 1 tester invitado prueba flow completo | 2h | — | ○ |
 | 18 | Auth: Apple Sign-In + Face ID re-login | Apple Sign-In via `expo-apple-authentication` + `supabase.auth.signInWithIdToken({provider:'apple'})` funciona en device real. Face ID re-login via `expo-local-authentication` + `expo-secure-store` (refresh token guardado bajo biometric flag). Welcome screen Apple button + Face ID prompt en cold-start si sesión existe. Deferred desde S3 (requiere Apple Developer $99/año). | 2h | — | ○ |
+| 19 | Resend production: verify breeze.app domain + swap sender | Resend Dashboard → Domains → add `breeze.app` → DKIM/SPF/DMARC records added at registrar → all green. Supabase SMTP "Sender email" cambiado de `onboarding@resend.dev` (sandbox, solo entrega a `liftkit3@gmail.com`) a `noreply@breeze.app`. OTP emails llegan a cualquier recipient. Deferred from S3 (depends on S13 breeze.app registered). | 0.5h | — | ○ |
+| 20 | Google OAuth consent screen: full production branding | OAuth consent screen completo en Google Cloud Console: App domain (`breeze.app`), Application home page, Privacy policy URL (from S14), Terms URL (from S14). Authorized domain `breeze.app` añadido. Branding muestra "Sign in to continue to **Breeze**" (no el supabase.co URL) para usuarios externos no-owner del project. Optional: submit for verification si el app sale del 100-user testing cap. Deferred from S3 (depends on S13 + S14 URLs públicos). | 0.5h | — | ○ |
 
-**M1.5 ship criteria:** breeze.app live, app instalable via TestFlight link, App Store review submission ready, Apple Sign-In funcional (App Store rule cuando hay Google sign-in).
+**M1.5 ship criteria:** breeze.app live, app instalable via TestFlight link, App Store review submission ready, Apple Sign-In funcional (App Store rule cuando hay Google sign-in), Resend entregando a cualquier recipient (no sandbox), Google consent screen mostrando "Breeze" para todos los usuarios.
 
 ---
 

@@ -55,10 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async (): Promise<SignInWithGoogleResult> => {
-    // Resolves to `breeze://...` in dev/standalone builds and `exp://...` in
-    // Expo Go. Whichever it is must be allow-listed in Supabase Dashboard
-    // → Authentication → URL Configuration → Redirect URLs.
-    const redirectTo = makeRedirectUri({ scheme: "breeze" });
+    // Resolves to `breeze://auth-callback` in dev/standalone builds and to
+    // `exp://192.168.x.x:8081/--/auth-callback` in Expo Go. The explicit path
+    // matters: Supabase silently rejects custom-scheme URLs without a path,
+    // falling back to Site URL. Whichever URL this resolves to at runtime
+    // must be in Supabase Dashboard → Auth → URL Configuration → Redirect URLs.
+    const redirectTo = makeRedirectUri({ scheme: "breeze", path: "auth-callback" });
     if (__DEV__) console.log("[Breeze auth] OAuth redirect URL:", redirectTo);
 
     const { data, error } = await supabase.auth.signInWithOAuth({

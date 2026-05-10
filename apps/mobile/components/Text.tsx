@@ -12,6 +12,23 @@ import { cn } from "../lib/cn";
  *   <Text variant="h1">Hello</Text>
  *   <Text variant="bodySm" color="muted">Subtitle</Text>
  */
+
+// Each weight ships as its own font file from @expo-google-fonts/plus-jakarta-sans
+// and is registered under its canonical name. RN cannot resolve a single family
+// across weights, so each variant binds to its specific font name.
+const VARIANT_TO_FONT_FAMILY = {
+  display: "PlusJakartaSans_800ExtraBold",
+  h1:      "PlusJakartaSans_800ExtraBold",
+  h2:      "PlusJakartaSans_700Bold",
+  h3:      "PlusJakartaSans_700Bold",
+  bodyLg:  "PlusJakartaSans_400Regular",
+  body:    "PlusJakartaSans_400Regular",
+  bodySm:  "PlusJakartaSans_400Regular",
+  caption: "PlusJakartaSans_500Medium",
+  label:   "PlusJakartaSans_600SemiBold",
+  tagline: "PlusJakartaSans_500Medium",
+} as const;
+
 const textStyles = cva("font-sans", {
   variants: {
     variant: {
@@ -65,8 +82,10 @@ export function Text({
   children,
   ...rest
 }: TextProps) {
+  const resolvedVariant: TextVariant = variant ?? "body";
   return (
     <RNText
+      style={{ fontFamily: VARIANT_TO_FONT_FAMILY[resolvedVariant] }}
       className={cn(textStyles({ variant, color, align }), className)}
       {...rest}
     >

@@ -8,10 +8,20 @@
   ],
   "scripts": {
     "mobile": "npm run dev --workspace=apps/mobile",
-    "web": "npm run dev --workspace=apps/web"
+    "web": "npm run dev --workspace=apps/web",
+    "prepare": "husky"
   },
   "overrides": {
     "react": "19.1.0",
     "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.3"
+  },
+  "lint-staged": {
+    "apps/mobile/**/*.{ts,tsx}": [
+      "npm run lint --workspace=apps/mobile --"
+    ]
   }
 }

@@ -29,6 +29,28 @@ const VARIANT_TO_FONT_FAMILY = {
   tagline: "PlusJakartaSans_500Medium",
 } as const;
 
+// Optional weight override — re-binds fontFamily to the matching PJS file AND
+// applies the corresponding Tailwind class so leading/spacing remain consistent.
+// Use when a screen needs a weight that doesn't match the variant's default
+// (e.g., body @ 700 for card titles, bodySm @ 600 for connect row title).
+const WEIGHT_TO_FONT_FAMILY = {
+  normal:    "PlusJakartaSans_400Regular",
+  medium:    "PlusJakartaSans_500Medium",
+  semibold:  "PlusJakartaSans_600SemiBold",
+  bold:      "PlusJakartaSans_700Bold",
+  extrabold: "PlusJakartaSans_800ExtraBold",
+} as const;
+
+const WEIGHT_TO_CLASS = {
+  normal:    "font-normal",
+  medium:    "font-medium",
+  semibold:  "font-semibold",
+  bold:      "font-bold",
+  extrabold: "font-extrabold",
+} as const;
+
+export type TextWeight = keyof typeof WEIGHT_TO_FONT_FAMILY;
+
 const textStyles = cva("font-sans", {
   variants: {
     variant: {
@@ -72,21 +94,30 @@ export type TextProps = VariantProps<typeof textStyles> &
   Omit<RNTextProps, "style"> & {
     children: React.ReactNode;
     className?: string;
+    weight?: TextWeight;
   };
 
 export function Text({
   variant,
   color,
   align,
+  weight,
   className,
   children,
   ...rest
 }: TextProps) {
   const resolvedVariant: TextVariant = variant ?? "body";
+  const fontFamily = weight
+    ? WEIGHT_TO_FONT_FAMILY[weight]
+    : VARIANT_TO_FONT_FAMILY[resolvedVariant];
   return (
     <RNText
-      style={{ fontFamily: VARIANT_TO_FONT_FAMILY[resolvedVariant] }}
-      className={cn(textStyles({ variant, color, align }), className)}
+      style={{ fontFamily }}
+      className={cn(
+        textStyles({ variant, color, align }),
+        weight && WEIGHT_TO_CLASS[weight],
+        className,
+      )}
       {...rest}
     >
       {children}

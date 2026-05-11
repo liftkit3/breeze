@@ -14,7 +14,9 @@ import { Text, type TextColor } from "./Text";
  *   oauth-light / oauth-outline   → rounded-full (9999px) — pill, used on dark-hero
  *   oauth-glass                   → rounded-full + semi-transparent — Login cosmic-pill style
  *   primary-pill                  → sage filled pill — Continue/Verify CTAs on auth screens
- *   glass-disabled                → faint glass pill — disabled-state pair to primary-pill
+ *   secondary-pill                → white pill + stone border — Cancelar pair to primary-pill
+ *   neutral-pill                  → stone-200 pill — disabled-state pair to primary-pill on light bg
+ *   glass-disabled                → faint glass pill — disabled-state pair to primary-pill on dark bg
  */
 
 const buttonContainerStyles = cva(
@@ -30,6 +32,8 @@ const buttonContainerStyles = cva(
         "oauth-glass":  "bg-white/10 border border-white/20 rounded-full",
         // Auth-screen CTAs (email / otp / verified)
         "primary-pill":   "bg-primary rounded-full",
+        "secondary-pill": "bg-white border-[1.5px] border-stone-200 rounded-full",
+        "neutral-pill":   "bg-stone-200 rounded-full",
         "glass-disabled": "bg-white/[0.08] border border-white/[0.12] rounded-full",
       },
       size: {
@@ -65,6 +69,8 @@ const variantToTextColor: Record<NonNullable<VariantProps<typeof buttonContainer
   "oauth-outline": "inverse",
   "oauth-glass": "inverse",
   "primary-pill": "onPrimary",
+  "secondary-pill": "text",
+  "neutral-pill": "muted",
   "glass-disabled": "inverse",
 };
 
@@ -96,7 +102,11 @@ export function Button({
   const textColor = variantToTextColor[resolvedVariant];
   const isInactive = disabled || loading;
   const isOAuth = resolvedVariant.startsWith("oauth");
-  const isPill = resolvedVariant === "primary-pill" || resolvedVariant === "glass-disabled";
+  const isPill =
+    resolvedVariant === "primary-pill" ||
+    resolvedVariant === "secondary-pill" ||
+    resolvedVariant === "neutral-pill" ||
+    resolvedVariant === "glass-disabled";
   const resolvedSize = size ?? (isOAuth ? "oauth" : isPill ? "pill" : "md");
 
   return (

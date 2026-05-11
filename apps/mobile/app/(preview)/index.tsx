@@ -205,6 +205,20 @@ export default function PreviewCatalog() {
           </View>
         </Section>
 
+        <Section title="Button — onboarding pills (on cream)">
+          <Stack gap="sm">
+            <Button variant="primary-pill" fullWidth onPress={() => {}}>
+              Continuar (3)
+            </Button>
+            <Button variant="neutral-pill" fullWidth onPress={() => {}}>
+              Continuar
+            </Button>
+            <Button variant="secondary-pill" fullWidth onPress={() => {}}>
+              Cancelar
+            </Button>
+          </Stack>
+        </Section>
+
         <Spacer size="2xl" />
 
         <Section title="Auth flow — real screens">
@@ -227,6 +241,31 @@ export default function PreviewCatalog() {
             <Link href={"/(auth)/verified" as Href} asChild>
               <Button variant="secondary" fullWidth onPress={() => {}}>
                 Verified →
+              </Button>
+            </Link>
+          </Stack>
+        </Section>
+
+        <Section title="Onboarding flow — real screens">
+          <Stack gap="sm">
+            <Link href={"/(onboarding)/hobbies" as Href} asChild>
+              <Button variant="primary" fullWidth onPress={() => {}}>
+                Step 1 — Hobbies →
+              </Button>
+            </Link>
+            <Link href={"/(onboarding)/trigger" as Href} asChild>
+              <Button variant="secondary" fullWidth onPress={() => {}}>
+                Step 2 — Trigger →
+              </Button>
+            </Link>
+            <Link href={"/(onboarding)/notifications" as Href} asChild>
+              <Button variant="secondary" fullWidth onPress={() => {}}>
+                Step 3 — Notifications →
+              </Button>
+            </Link>
+            <Link href={{ pathname: "/(main)", params: { notifBanner: "1" } } as Href} asChild>
+              <Button variant="secondary" fullWidth onPress={() => {}}>
+                Home with banner →
               </Button>
             </Link>
           </Stack>

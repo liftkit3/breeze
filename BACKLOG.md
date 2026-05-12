@@ -1,6 +1,6 @@
 # Breeze — BACKLOG
 
-Generated: 2026-05-03 · Updated: 2026-05-10
+Generated: 2026-05-03 · Updated: 2026-05-11
 Based on: scope workplan + build decisions (Camino B híbrido B2C+B2B)
 Total estimado: ~101h | Ship target: 20 junio 2026
 Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
@@ -11,13 +11,12 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 Focus: get the manual end-to-end loop working (onboarding → home → pause → activity → feedback) before bolting on push triggers, multi-tenant routing, or compliance polish. Validate that the model is fun first; productionize after.
 
-1. **M1 S5** — Onboarding quiz: hobbies + contexto + push permission (~4h, lights up the `/(onboarding)/hobbies` route the verified screen already points to)
-2. **M1 S9** — Home screen with manual "pausa ahora" CTA (~3h, becomes the destination after onboarding)
-3. **M1 S10** — Pause Bottom Sheet + Claude API Edge Function (~4h, the "magic" of the product)
-4. **M1 S11** — Pause timer screen + completion flow (~2h)
-5. **M1 S12** — Post-pause feedback screen (~1h)
-6. **M1 S8** — Push notification infra (~3h, after manual loop validates)
-7. **M1.5 polish bundle** — Apple Sign-In + Resend prod sender + Google consent branding + Domain router (S18-S21, deferred from S3/S4 pending Apple Developer + `breeze.app` purchase)
+1. **M1 S9** — Home screen with manual "pausa ahora" CTA (~3h, becomes the destination after onboarding)
+2. **M1 S10** — Pause Bottom Sheet + Claude API Edge Function (~4h, the "magic" of the product)
+3. **M1 S11** — Pause timer screen + completion flow (~2h)
+4. **M1 S12** — Post-pause feedback screen (~1h)
+5. **M1 S8** — Push notification infra (~3h, after manual loop validates)
+6. **M1.5 polish bundle** — Apple Sign-In + Resend prod sender + Google consent branding + Domain router (S18-S21, deferred from S3/S4 pending Apple Developer + `breeze.app` purchase)
 
 ---
 
@@ -58,7 +57,7 @@ Focus: get the manual end-to-end loop working (onboarding → home → pause →
 | 1 | Monorepo + Expo + NativeWind locked | Repo creado con apps/mobile + packages/, `npx expo start` corre, NativeWind aplica clases sin errors, design-tokens importable | 3h | 1.5h | ✓ |
 | 2 | Supabase project + schema + RLS | 3 tablas (companies, profiles, pauses) creadas via migrations versionadas, RLS testeada para los 3 casos (own, company-mate, foreign) | 3h | 1h | ✓ |
 | 3 | Auth: Email OTP + Google OAuth | Email OTP funciona end-to-end (Supabase + Resend SMTP, 6 dígitos, auto-verify a los 400ms, navigate a /verified). Google OAuth funciona end-to-end via `expo-web-browser` + `supabase.auth.signInWithOAuth` (in-app browser, `prompt=select_account`, deep-link `exp://…/--/auth-callback` o `breeze://auth-callback`, sesión persistida en AsyncStorage). Apple + Face ID **deferred a M1.5** (ambos requieren Apple Developer subscription $99/año). | 5h | ~10h | ✓ |
-| 5 | Onboarding quiz: hobbies + contexto + push permission | Quiz tipo personalidad (no formulario), guarda hobbies array + default_context en profile, pide push permission con copy claro. **In M1 todos los usuarios van al mismo onboarding** — la diferenciación B2C vs B2B se hace en M1.5 S21 (Domain Router) antes del primer launch real. | 4h | — | ○ |
+| 5 | Onboarding quiz: hobbies + contexto + push permission | Quiz tipo personalidad (no formulario), guarda hobbies array + default_context en profile, pide push permission con copy claro. **In M1 todos los usuarios van al mismo onboarding** — la diferenciación B2C vs B2B se hace en M1.5 S21 (Domain Router) antes del primer launch real. | 4h | 1h | ✓ |
 | 6 | Profile screen (editable) | Usuario edita hobbies, contexto default, ve streak count, ve trial_ends_at si aplica | 2h | — | ○ |
 | 7 | Google Calendar OAuth + token encryption + gap detection | Calendar conecta, refresh token cifrado con pgcrypto en profiles.calendar_token, Edge Function `detect-calendar-gaps` encuentra gaps de 30+ min | 5h | — | ○ |
 | 8 | Push notification infra | Token Expo guardado en profile.push_token, Edge Function `send-pause-notification` lista (vacía pero deployada), permission flow OK | 3h | — | ○ |
@@ -183,6 +182,8 @@ Focus: get the manual end-to-end loop working (onboarding → home → pause →
 [2026-05-10] [M0.5 D9] **Plus Jakarta Sans loading.** `@expo-google-fonts/plus-jakarta-sans@0.4.2` (exact, no caret per RN ecosystem rule) installed in `apps/mobile`. `app/_layout.tsx` calls `SplashScreen.preventAutoHideAsync()` before render, loads the 5 weights (400/500/600/700/800) via `useFonts`, hides splash inside an effect once `fontsLoaded`, returns `null` until ready. Bonus binding: `components/Text.tsx` adds a `VARIANT_TO_FONT_FAMILY` map and applies it via inline `style.fontFamily` per variant — without this, RN falls through to System font because expo-google-fonts registers each weight under its own canonical name (e.g. `PlusJakartaSans_500Medium`) and RN can't resolve weight within a single family. Without the binding, D9 would have shipped dead bytes.
 
 [2026-05-10] [M0.5 D10] **Repo CLAUDE.md updated.** New `### Design System Rules (regla #3 — mandatory)` subsection in HARD RULES: forbids hex/rgb/hsl literals (ESLint enforces), mandates composing from `apps/mobile/components/` primitives, requires ts:check + lint before commit (Husky enforces), points at canonical token files + brand brief + token spec, and records the typography binding pattern (5 PJS weights + Text primitive variant→family map). Branching section also reinforced with the M0.5 lesson: "Cada milestone o story significativa abre su propia branch desde main. NUNCA acumular varias stories sobre main directo." With this, M0.5 ship criteria is met — drift is mathematically impossible: TS rejects invalid variants, ESLint rejects hex literals, Husky rejects bad commits.
+
+[2026-05-11] [M1 S5] **Onboarding flow shipped** on PR #6 (merged 01:03 UTC, +1367/-55 across 16 files). Three screens between `/(auth)/verified` and `/(main)`: hobbies (predefined + custom via BottomSheet, max 3), trigger (Pomodoro vs Entre reuniones — second reveals GoogleConnectRow), notifications (real `expo-notifications` permission prompt). `OnboardingContext.save()` persists `hobbies[]` + `default_context` to `profiles` on the final step. 5 new components (OnboardingHeader, HobbyTile, TriggerCard, GoogleConnectRow, BottomSheet) + `weight` prop on Text + `secondary-pill` / `neutral-pill` Button variants — every screen is pure primitive composition. Home gains a dismissible honey-100 banner that re-prompts when notification permission was denied/deferred. **Deferred:** Google Calendar OAuth in GoogleConnectRow is a `setTimeout` stub marked `TODO(M1 S7)` — real handshake (Calendar API scope + pgcrypto-encrypted refresh token to `profiles.calendar_token`) lands with S7. `calendarConnected` is captured in onboarding state but not persisted; only the intent (`default_context = "calendar"`) is saved.
 
 ---
 

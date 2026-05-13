@@ -6,7 +6,10 @@ import { GlassSurface } from "@/components/GlassSurface";
 /**
  * StreakChip — small glass pill with a coral flame + day count.
  *
- * Hidden by HomeScreen when days === 0 (not "0 días" — just absent, per spec §5).
+ * Always renders, including at days === 0. Spec §5 originally said to hide
+ * the chip on day 0 ("not '0 días' — just absent"), but on real devices
+ * the empty top-right read as a layout bug; showing "0 días" gives new
+ * users an anchor for the streak concept.
  */
 
 export function StreakChip({

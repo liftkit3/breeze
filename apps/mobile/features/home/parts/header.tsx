@@ -3,7 +3,11 @@ import { Text } from "@/components/Text";
 import { StreakChip } from "./streak-chip";
 
 /**
- * Header — date eyebrow + greeting on the left, optional StreakChip on the right.
+ * Header — date eyebrow + greeting on the left, StreakChip on the right.
+ *
+ * The chip renders even when `streakDays === 0` so first-time users see
+ * the slot and understand the concept (spec §5's "hide at 0" felt empty
+ * on the real screen).
  *
  * Greeting size (28/700 per spec) sits between h2 (24) and h1 (32) tokens.
  * Using h2 + weight=bold reads close enough at device sizes; if/when we add
@@ -39,9 +43,7 @@ export function Header({
         </Text>
       </View>
 
-      {streakDays > 0 ? (
-        <StreakChip days={streakDays} onPress={onStreakPress} />
-      ) : null}
+      <StreakChip days={streakDays} onPress={onStreakPress} />
     </View>
   );
 }

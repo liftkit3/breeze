@@ -230,6 +230,32 @@ const shadow = {
   accent: "0 8px 20px rgba(255,132,116,0.30)",
 };
 
+// ─── Glass surfaces (Home screen aesthetic — alphas) ──────────────────────
+// Centralizes every semi-transparent value used by GlassSurface, AmbientGlow,
+// BottomNav, FAB, PauseHero. Keeps tsx files token-pure (ESLint forbids rgba).
+const glass = {
+  // White tint overlays (sit on top of BlurView)
+  tint: {
+    base: "rgba(255,255,255,0.55)",      // standard glass card
+    idle: "rgba(255,255,255,0.50)",      // mood idle button bg
+    pill: "rgba(255,255,255,0.60)",      // hero pill bg
+    inner: "rgba(255,255,255,0.22)",     // play circle inside coral CTA
+    halo: "rgba(255,255,255,0.50)",      // FAB outer white halo
+    insetLight: "rgba(255,255,255,0.40)",// FAB inset top highlight
+  },
+  // Borders (the inset that creates "thickness")
+  border: {
+    highlight: "rgba(255,255,255,0.60)", // top glass highlight
+    seal: "rgba(45,42,38,0.04)",         // bottom glass seal
+  },
+  // Shadows for glass elements (pre-baked rgba so RN shadowColor works)
+  shadow: {
+    lift: "rgba(45,42,38,0.07)",         // standard glass card lift
+    nav: "rgba(45,42,38,0.10)",          // bottom nav (deeper)
+    insetDark: "rgba(0,0,0,0.08)",       // FAB inset shadow
+  },
+};
+
 // ─── Motion ──────────────────────────────────────────────────────────────
 const motion = {
   duration: {
@@ -342,6 +368,7 @@ module.exports = {
   borderWidth,
   typography,
   shadow,
+  glass,
   motion,
   zIndex,
   size,

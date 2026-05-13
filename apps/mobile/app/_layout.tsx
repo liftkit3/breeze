@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   useFonts,
   PlusJakartaSans_400Regular,
@@ -36,6 +37,7 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
   });
+  const [queryClient] = useState(() => new QueryClient());
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -46,9 +48,11 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <AuthProvider>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }} />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <StatusBar style="auto" />
+        <Stack screenOptions={{ headerShown: false }} />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

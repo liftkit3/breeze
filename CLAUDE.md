@@ -7,7 +7,7 @@
 
 ## What is Breeze
 
-B2C + B2B mobile app (modelo híbrido tipo Granola) que envía notificaciones misteriosas a empleados de tech para pausas de 5/10/15 min con actividades personalizadas por hobby + contexto, generadas en tiempo real con Claude API.
+B2C + B2B mobile app (modelo híbrido tipo Granola) que envía notificaciones misteriosas a empleados de tech para pausas de 5/10/15 min con actividades personalizadas por hobby + contexto, generadas en tiempo real con Gemini 2.5 Flash (Google AI Studio).
 
 **JTBD:** Cuando un empleado de tech lleva horas en ritmo frenético, necesita pausar y hacer algo que genuinamente disfruta — para recuperar energía antes de quemarse.
 
@@ -46,12 +46,15 @@ These rules apply to EVERY task. If a task conflicts with these, pause and ask t
 - **NUNCA hardcodear API keys** en código
 - **NUNCA commitear `.env*` files** (excepto `.env.example` con placeholders)
 - Variables: `.env.local` (dev) | EAS Secrets (mobile build) | Vercel env vars (web) | Supabase Dashboard (Edge Functions)
-- `SUPABASE_SERVICE_ROLE_KEY` y `CLAUDE_API_KEY` SOLO en Edge Functions, NUNCA en cliente
+- `SUPABASE_SERVICE_ROLE_KEY` y `GEMINI_API_KEY` SOLO en Edge Functions, NUNCA en cliente
 
-### Claude API
-- App mobile y web **NUNCA** llaman directo a Claude API
+### LLM API (Gemini 2.5 Flash)
+- App mobile y web **NUNCA** llaman directo a la Gemini API
 - Toda llamada pasa por Edge Function `generate-activity`
 - Razón: la key se filtra si va al cliente
+- **Provider decision (2026-05-13, S10a):** Gemini 2.5 Flash via Google AI Studio. Escogido sobre Claude Haiku 4.5 y GPT-4o-mini por su free tier real (~1500 req/día sin tarjeta) que cubre dev + M1 TestFlight interno sin gasto.
+- **Antes de M1.5 launch:** flip a **Vertex AI paid** — el free tier de AI Studio puede usar prompts/responses para entrenar modelos (no OK para datos de mood/wellness con usuarios reales).
+- Llamadas a `gemini-2.5-flash` deben pasar `thinkingConfig: { thinkingBudget: 0 }` — el default quema ~700 reasoning tokens en outputs creativos cortos sin beneficio.
 
 ### Auth methods (orden estricto)
 1. **Continue with Google** — primary, también provee Calendar OAuth
@@ -113,7 +116,7 @@ Construido en M0.5 (2026-05-09 → 2026-05-10). Drift mathematically impossible:
 Antes de escribir UNA línea de código de cualquier story, recito en voz alta este audit de 60 segundos:
 
 1. **Servicios externos** — ¿esta story necesita un proyecto/cuenta remota que no exista todavía?
-   Lista típica: Supabase (proyecto remoto), Stripe, RevenueCat, Apple Developer ($99/año), Google Play ($25 una vez), Vercel, dominio breeze.app, Google Cloud Console (OAuth + APIs), Apple Developer Portal (App ID + Sign In with Apple Service ID + Key), Anthropic (CLAUDE_API_KEY con billing), Resend, Sentry, PostHog.
+   Lista típica: Supabase (proyecto remoto), Stripe, RevenueCat, Apple Developer ($99/año), Google Play ($25 una vez), Vercel, dominio breeze.app, Google Cloud Console (OAuth + APIs), Apple Developer Portal (App ID + Sign In with Apple Service ID + Key), Google AI Studio (GEMINI_API_KEY, free tier para dev → Vertex AI paid antes de launch), Resend, Sentry, PostHog.
 2. **Credenciales** — ¿están todas las keys requeridas en `.env.local` / EAS Secrets / Vercel env / Supabase Edge secrets? Verifica con `cat`, no con memoria.
 3. **Hardware / cuentas pagas** — ¿necesita device físico (Face ID, push real), signing cert, o cuenta con costo activo?
 4. **Upstream artifacts** — para cada story ✓ previa de la que esta dependa: VERIFICA que el deliverable existe (lee el archivo, query la tabla, hit el endpoint). NO confíes en el ✓ por sí solo.
@@ -223,7 +226,7 @@ Si algo falta → STOP. Flagger al usuario. Decidir entre:
 │   ├── migrations/
 │   └── functions/
 │       ├── domain-router/        ← email → company match
-│       ├── generate-activity/    ← Claude API call
+│       ├── generate-activity/    ← Gemini API call
 │       ├── send-pause-notification/
 │       ├── detect-calendar-gaps/
 │       ├── account-merge/

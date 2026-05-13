@@ -1,6 +1,6 @@
 # Breeze — BACKLOG
 
-Generated: 2026-05-03 · Updated: 2026-05-11
+Generated: 2026-05-03 · Updated: 2026-05-13
 Based on: scope workplan + build decisions (Camino B híbrido B2C+B2B)
 Total estimado: ~101h | Ship target: 20 junio 2026
 Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
@@ -11,12 +11,11 @@ Status legend: ○ pending · → in progress · ✓ done · ✗ blocked
 
 Focus: get the manual end-to-end loop working (onboarding → home → pause → activity → feedback) before bolting on push triggers, multi-tenant routing, or compliance polish. Validate that the model is fun first; productionize after.
 
-1. **M1 S9** — Home screen with manual "pausa ahora" CTA (~3h, becomes the destination after onboarding)
-2. **M1 S10** — Pause Bottom Sheet + Claude API Edge Function (~4h, the "magic" of the product)
-3. **M1 S11** — Pause timer screen + completion flow (~2h)
-4. **M1 S12** — Post-pause feedback screen (~1h)
-5. **M1 S8** — Push notification infra (~3h, after manual loop validates)
-6. **M1.5 polish bundle** — Apple Sign-In + Resend prod sender + Google consent branding + Domain router (S18-S21, deferred from S3/S4 pending Apple Developer + `breeze.app` purchase)
+1. **M1 S10** — Pause Bottom Sheet + Claude API Edge Function (~4h, the "magic" of the product). Replaces the `/pause-coming-soon` stub Home currently routes to.
+2. **M1 S11** — Pause timer screen + completion flow (~2h)
+3. **M1 S12** — Post-pause feedback screen (~1h)
+4. **M1 S8** — Push notification infra (~3h, after manual loop validates)
+5. **M1.5 polish bundle** — Apple Sign-In + Resend prod sender + Google consent branding + Domain router (S18-S21, deferred from S3/S4 pending Apple Developer + `breeze.app` purchase)
 
 ---
 
@@ -61,7 +60,7 @@ Focus: get the manual end-to-end loop working (onboarding → home → pause →
 | 6 | Profile screen (editable) | Usuario edita hobbies, contexto default, ve streak count, ve trial_ends_at si aplica | 2h | — | ○ |
 | 7 | Google Calendar OAuth + token encryption + gap detection | Calendar conecta, refresh token cifrado con pgcrypto en profiles.calendar_token, Edge Function `detect-calendar-gaps` encuentra gaps de 30+ min | 5h | — | ○ |
 | 8 | Push notification infra | Token Expo guardado en profile.push_token, Edge Function `send-pause-notification` lista (vacía pero deployada), permission flow OK | 3h | — | ○ |
-| 9 | Home screen | Renderiza streak count, última pausa completada, count de pausas hoy, CTA "pausa manual" | 3h | — | ○ |
+| 9 | Home screen | Pause-first explorer (HOME_FLOW spec): header + StreakChip, MoodCheckIn 4 valence levels (mal/ok/bien/genial) with AsyncStorage + midnight expiry, PauseHero with copy reactive to (mood × top hobby), 3-cell HobbiesGrid, floating glass BottomNav + coral FAB. Hero CTA + FAB share `/pause-coming-soon` stub until S10. YouTube long-pause rail intentionally omitted (no YT API key yet). | 3h | — | ✓ |
 | 10 | Pause Bottom Sheet + Claude API Edge Function | Edge Function `generate-activity` llama Claude API con prompt {hobbies, context, duration}, retorna `{emoji, title, motivation}`, bottom sheet renderiza | 4h | — | ○ |
 | 11 | Pause timer screen + completion flow | Timer 5/10/15 min con countdown visible, completado actualiza pauses.completed_at + status='completed' | 2h | — | ○ |
 | 12 | Post-pause feedback screen | "¿Cómo te sentiste?" (3 emoji buttons), guarda en pauses, muestra streak update animado | 1h | — | ○ |
@@ -184,6 +183,8 @@ Focus: get the manual end-to-end loop working (onboarding → home → pause →
 [2026-05-10] [M0.5 D10] **Repo CLAUDE.md updated.** New `### Design System Rules (regla #3 — mandatory)` subsection in HARD RULES: forbids hex/rgb/hsl literals (ESLint enforces), mandates composing from `apps/mobile/components/` primitives, requires ts:check + lint before commit (Husky enforces), points at canonical token files + brand brief + token spec, and records the typography binding pattern (5 PJS weights + Text primitive variant→family map). Branching section also reinforced with the M0.5 lesson: "Cada milestone o story significativa abre su propia branch desde main. NUNCA acumular varias stories sobre main directo." With this, M0.5 ship criteria is met — drift is mathematically impossible: TS rejects invalid variants, ESLint rejects hex literals, Husky rejects bad commits.
 
 [2026-05-11] [M1 S5] **Onboarding flow shipped** on PR #6 (merged 01:03 UTC, +1367/-55 across 16 files). Three screens between `/(auth)/verified` and `/(main)`: hobbies (predefined + custom via BottomSheet, max 3), trigger (Pomodoro vs Entre reuniones — second reveals GoogleConnectRow), notifications (real `expo-notifications` permission prompt). `OnboardingContext.save()` persists `hobbies[]` + `default_context` to `profiles` on the final step. 5 new components (OnboardingHeader, HobbyTile, TriggerCard, GoogleConnectRow, BottomSheet) + `weight` prop on Text + `secondary-pill` / `neutral-pill` Button variants — every screen is pure primitive composition. Home gains a dismissible honey-100 banner that re-prompts when notification permission was denied/deferred. **Deferred:** Google Calendar OAuth in GoogleConnectRow is a `setTimeout` stub marked `TODO(M1 S7)` — real handshake (Calendar API scope + pgcrypto-encrypted refresh token to `profiles.calendar_token`) lands with S7. `calendarConnected` is captured in onboarding state but not persisted; only the intent (`default_context = "calendar"`) is saved.
+
+[2026-05-13] [M1 S9] **Home screen shipped** on PR #7 (merged 16:29 UTC; 4 commits — initial build + mood collapse + always-show streak + S5 backlog hygiene). +1.7k LOC across 31 files. Pause-first explorer per HOME_FLOW.md spec: Header → MoodCheckIn → PauseHero → HobbiesGrid → BottomNav. **Net-new primitives:** GlassSurface (expo-blur + tint + highlight border + tunable shadow), AmbientGlow (3 soft-tinted blobs outside the scroll), BottomNav (4 tabs + coral FAB, mounted in `(main)/_layout.tsx` so it persists across main routes). 9 new icons (flame, clock, play, arrow-right, pause + 4 nav). `glass` namespace added to `@breeze/design-tokens` (tint/border/shadow alphas) so primitives stay token-pure — ESLint stays strict, no scoped exemption needed. QueryClient wired at root `_layout.tsx`; first real `useQuery` usage via `useHomeData`. `useMood` hook persists selection in AsyncStorage `breeze.mood.today` with local-midnight expiry + runtime key validation. **Device QA decisions:** (1) Mood collapsed from spec's 5 emotion-typed buttons to 4 valence levels (mal · ok · bien · genial) because "cansada" wrapped to two lines on real screens. (2) StreakChip now always renders (spec §5 said hide at 0 días — empty top-right read as a layout bug on first launch). **Deferred / stubbed:** YouTube long-pause rail omitted entirely (needs `YOUTUBE_API_KEY` + `supabase/functions/yt-search/` Edge Function). Hero CTA + FAB both route to `/pause-coming-soon` placeholder screen until M1 S10 ships `generate-activity`. `nextPauseAt` pill hidden when null (S7/S8 territory). Hobby cell meta line is static "Explora" until pauses table grows a `hobby` column or content library lands. Blob blur is approximated via large soft circles (RN has no `filter: blur` for arbitrary views — react-native-skia is the upgrade path).
 
 ---
 

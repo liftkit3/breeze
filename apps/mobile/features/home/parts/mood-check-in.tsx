@@ -13,7 +13,7 @@ import { GlassSurface } from "@/components/GlassSurface";
 import type { MoodKey } from "../hero-copy";
 
 /**
- * MoodCheckIn — 5-button row inside a glass card.
+ * MoodCheckIn — 4-button row inside a glass card.
  *
  * Idle: low-alpha white tint, dim emoji, stone label.
  * Selected: coral bg, scale 1.04, bright emoji, white label.
@@ -22,12 +22,14 @@ import type { MoodKey } from "../hero-copy";
 
 type MoodSpec = { key: MoodKey; emoji: string; label: string };
 
+// 4-button valence scale, worst → best. Short single-word labels keep the
+// row aligned across small screens (previous 5-button version wrapped
+// "cansada" to two lines and broke the grid).
 const MOODS: readonly MoodSpec[] = [
-  { key: "low", emoji: "😔", label: "baja" },
-  { key: "tired", emoji: "😮‍💨", label: "cansada" },
+  { key: "bad", emoji: "😔", label: "mal" },
   { key: "ok", emoji: "🙂", label: "ok" },
-  { key: "anxious", emoji: "😣", label: "ansiosa" },
-  { key: "bright", emoji: "😌", label: "bien" },
+  { key: "good", emoji: "😌", label: "bien" },
+  { key: "great", emoji: "🤩", label: "genial" },
 ];
 
 export function MoodCheckIn({
@@ -121,6 +123,7 @@ function MoodButton({
           variant="caption"
           weight="semibold"
           color={selected ? "inverse" : "muted"}
+          numberOfLines={1}
         >
           {spec.label}
         </Text>

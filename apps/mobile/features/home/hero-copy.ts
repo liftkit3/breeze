@@ -8,7 +8,14 @@
  * Spec source: HOME_FLOW.md §3.3 mood→hero table + §3.4 hero composition.
  */
 
-export type MoodKey = "low" | "tired" | "ok" | "anxious" | "bright";
+/**
+ * Mood model: 4 valence levels, worst → best (mal · ok · bien · genial).
+ * Single-axis keeps labels short and the row alignment stable. Each level
+ * maps to one hero copy variant; the copy aims to *meet* the user where
+ * they are (breathing for "mal", celebrate for "genial").
+ */
+export const MOOD_KEYS = ["bad", "ok", "good", "great"] as const;
+export type MoodKey = (typeof MOOD_KEYS)[number];
 
 export type HeroCopy = {
   title: string;
@@ -17,14 +24,9 @@ export type HeroCopy = {
 };
 
 const BY_MOOD: Record<MoodKey, HeroCopy> = {
-  low: {
+  bad: {
     title: "Respiración suave",
-    sub: "Una caja sencilla: 4-4-4-4. Vuelve más liviana.",
-    time: "5 min",
-  },
-  tired: {
-    title: "Sonido sin pantalla",
-    sub: "Cierra los ojos. Deja que el oído descanse.",
+    sub: "Una caja 4-4-4-4. Vuelve más liviana.",
     time: "5 min",
   },
   ok: {
@@ -32,12 +34,12 @@ const BY_MOOD: Record<MoodKey, HeroCopy> = {
     sub: "Algo breve para volver más despierta.",
     time: "5 min",
   },
-  anxious: {
-    title: "4-7-8 respiración",
-    sub: "Inhala 4. Sostén 7. Exhala 8. Tres rondas.",
-    time: "4 min",
+  good: {
+    title: "Algo creativo",
+    sub: "Aprovecha el ritmo — un micro-skill rápido.",
+    time: "5 min",
   },
-  bright: {
+  great: {
     title: "Cuento narrado",
     sub: "Cortázar, antes de volver. Vas a sonreír.",
     time: "8 min",
@@ -54,7 +56,7 @@ const HOBBY_TWEAK_SUB: Record<string, string> = {
   music: "Algo breve con sonido — te lo recomendamos.",
   reading: "Algo corto para leer en pantalla — tres minutos.",
   sports: "Una micro-rutina para soltar el cuerpo.",
-  art: "Un gesto creativo — sketch rápido.",
+  art: "Un gesto creativo — un sketch rápido.",
   meditation: "Respiración consciente — tres rondas.",
   gaming: "Un mini-reto mental para resetear.",
 };

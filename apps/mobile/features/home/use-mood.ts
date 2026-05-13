@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { MoodKey } from "./hero-copy";
+import { MOOD_KEYS, type MoodKey } from "./hero-copy";
+
+const VALID_KEYS: ReadonlySet<string> = new Set(MOOD_KEYS);
 
 /**
  * useMood — daily mood selection, persisted with local-midnight expiry.
@@ -45,7 +47,14 @@ export function useMood() {
           return;
         }
         const parsed = JSON.parse(raw) as Mood;
-        if (parsed?.setAt && isToday(parsed.setAt)) {
+        // Validate setAt freshness AND that the stored key still exists in
+        // the current MoodKey set — keys can shift between releases (the
+        // 5→4 mood collapse, for example), so old values get cleared.
+        if (
+          parsed?.setAt &&
+          isToday(parsed.setAt) &&
+          VALID_KEYS.has(parsed.key)
+        ) {
           setMoodState(parsed);
         } else {
           await AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});

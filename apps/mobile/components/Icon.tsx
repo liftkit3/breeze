@@ -13,6 +13,7 @@ import { HomeIcon } from "./icons/HomeIcon";
 import { LibraryIcon } from "./icons/LibraryIcon";
 import { SoundsIcon } from "./icons/SoundsIcon";
 import { ProfileIcon } from "./icons/ProfileIcon";
+import { SparkleIcon } from "./icons/SparkleIcon";
 import {
   GuitarIcon,
   BookIcon,
@@ -73,7 +74,8 @@ export type IconName =
   | "running"
   | "art"
   | "meditation"
-  | "writing";
+  | "writing"
+  | "sparkle";
 
 export type IconSize = keyof typeof SIZES;
 export type IconColor = keyof typeof COLORS;
@@ -129,6 +131,8 @@ export function Icon({ name, size = "md", color = "text" }: IconProps) {
       return <MeditationIcon size={px} color={hex} />;
     case "writing":
       return <WritingIcon size={px} color={hex} />;
+    case "sparkle":
+      return <SparkleIcon size={px} color={hex} />;
     default: {
       const _exhaustive: never = name;
       return null;

@@ -25,10 +25,10 @@ export type GlassSurfaceProps = {
   radius?: number;
   /** BlurView intensity 0–100. 40 ≈ the spec's blur(20px) saturate(160%). */
   intensity?: number;
-  /** Tint variant. Defaults to `tint.base` (0.55). Use `tint.idle` for mood idle. */
-  tint?: "base" | "idle" | "pill";
-  /** Shadow profile. `card` for hero/mood, `nav` for bottom nav. */
-  shadow?: "card" | "nav" | "none";
+  /** Tint variant. Defaults to `tint.base` (0.55). Use `tint.idle` for mood idle, `tint.sheet` (0.85) for the picker bottom-sheet. */
+  tint?: "base" | "idle" | "pill" | "sheet";
+  /** Shadow profile. `card` for hero/mood, `nav` for bottom nav, `sheet` for the picker (upward shadow). */
+  shadow?: "card" | "nav" | "sheet" | "none";
   className?: string;
   /** Style on the outer (shadow) wrapper — use for margin, position. */
   style?: StyleProp<ViewStyle>;
@@ -98,6 +98,13 @@ const SHADOW = {
     shadowOpacity: 0.1,
     shadowRadius: 40,
     elevation: 12,
+  } satisfies ViewStyle,
+  sheet: {
+    shadowColor: palette.stone[900],
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 40,
+    elevation: 18,
   } satisfies ViewStyle,
 } as const;
 

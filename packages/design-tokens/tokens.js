@@ -242,6 +242,7 @@ const glass = {
     inner: "rgba(255,255,255,0.22)",     // play circle inside coral CTA
     halo: "rgba(255,255,255,0.50)",      // FAB outer white halo
     insetLight: "rgba(255,255,255,0.40)",// FAB inset top highlight
+    sheet: "rgba(255,255,255,0.85)",     // picker bottom-sheet container
   },
   // Borders (the inset that creates "thickness")
   border: {
@@ -253,6 +254,10 @@ const glass = {
     lift: "rgba(45,42,38,0.07)",         // standard glass card lift
     nav: "rgba(45,42,38,0.10)",          // bottom nav (deeper)
     insetDark: "rgba(0,0,0,0.08)",       // FAB inset shadow
+  },
+  // Modal scrims (sit between content and overlay sheet)
+  scrim: {
+    modal: "rgba(45,42,38,0.18)",        // picker bottom-sheet backdrop
   },
 };
 

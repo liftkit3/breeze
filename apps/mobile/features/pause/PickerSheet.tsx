@@ -130,9 +130,7 @@ export function PickerSheet() {
 
             {error ? (
               <Text variant="caption" color="muted">
-                {error === "Sin sesión activa"
-                  ? error
-                  : "No pudimos preparar tu pausa. Intenta de nuevo."}
+                {error}
               </Text>
             ) : null}
 

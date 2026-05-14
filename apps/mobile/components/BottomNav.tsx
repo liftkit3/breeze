@@ -10,6 +10,7 @@ import { glass, palette } from "@breeze/design-tokens";
 import { Icon, type IconName, type IconColor } from "./Icon";
 import { Text } from "./Text";
 import { GlassSurface } from "./GlassSurface";
+import { usePickerStore } from "@/features/pause/use-picker-store";
 
 /**
  * BottomNav — floating glass nav with 4 tab slots + 1 coral FAB in the middle.
@@ -45,6 +46,7 @@ export function BottomNav() {
   // Only "Inicio" is wired today. Active state stays on Inicio since the
   // other tabs alert "Próximamente" instead of routing anywhere.
   const activeKey: SlotKey = "home";
+  const openPicker = usePickerStore((s) => s.open);
 
   const onTab = (slot: Slot) => {
     if (slot.key === "home") {
@@ -58,7 +60,7 @@ export function BottomNav() {
   };
 
   const onFab = () => {
-    router.push("/pause-coming-soon");
+    openPicker();
   };
 
   return (

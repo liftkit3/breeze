@@ -7,7 +7,7 @@ import {
   Text as RNText,
   View,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView, type Edges } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
 import { palette } from "@breeze/design-tokens";
@@ -20,6 +20,7 @@ import { PauseHero } from "@/features/home/parts/pause-hero";
 import { HobbiesGrid } from "@/features/home/parts/hobbies-grid";
 import { useHomeData } from "@/features/home/use-home-data";
 import { useMood } from "@/features/home/use-mood";
+import { usePickerStore } from "@/features/pause/use-picker-store";
 
 /**
  * Home — pause-first content explorer (M1 S9).
@@ -34,8 +35,9 @@ import { useMood } from "@/features/home/use-mood";
  * `?notifBanner=1` (denied/skipped notification permission), show a honey
  * nudge with inline "Activar". Hides on grant.
  *
- * Hero CTA + BottomNav FAB share a single destination — the M1 S10 stub at
- * /(main)/pause-coming-soon. Replace when S10 lands.
+ * Hero CTA + BottomNav FAB share a single destination — both open the global
+ * PickerSheet via `usePickerStore.open()`. The sheet is mounted in the (main)
+ * layout so it overlays from any route in this group.
  */
 
 export default function HomeScreen() {
@@ -45,6 +47,7 @@ export default function HomeScreen() {
 
   const { data, isLoading } = useHomeData();
   const { mood, setMood } = useMood();
+  const openPicker = usePickerStore((s) => s.open);
 
   const handleActivate = async () => {
     try {
@@ -57,7 +60,7 @@ export default function HomeScreen() {
   };
 
   const handleStartPause = () => {
-    router.push("/pause-coming-soon");
+    openPicker();
   };
 
   const handleEditHobbies = () => {
